@@ -31,7 +31,7 @@ graph TD
         DB[(PostgreSQL + PostGIS)]
     end
     
-    subgraph DataPipeline [Tiền xử lý Data (Chạy 1 lần)]
+    subgraph DataPipeline ["Tiền xử lý Data (Chạy 1 lần)"]
         ETL[Geopandas / Python]
         CSV[(File CSV Data)]
         ETL -- Đọc --> CSV
