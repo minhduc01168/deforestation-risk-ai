@@ -1,0 +1,19 @@
+outputs/
+__pycache__/
+.ipynb_checkpoints/
+.DS_Store
+*.zip
+*.tif
+*.tiff
+# Allow master tables for reproducibility
+!data/*.csv
+!results/*.csv
+_bmad/
+_bmad-output/
+.agent/
+.agents/
+docs/
+participation_evidence/
+web-gis/frontend/node_modules/
+
+

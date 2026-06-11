@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  # Database Service (PostgreSQL with PostGIS for spatial data)
+  db:
+    image: postgis/postgis:15-3.3
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgrespassword
+      POSTGRES_DB: gialai_forest
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d gialai_forest"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # FastAPI Backend Service
+  backend:
+    build: 
+      context: ./backend
+    ports:
+      - "8000:8000"
+    environment:
+      # Connect to the db service
+      - DATABASE_URL=postgresql://postgres:postgrespassword@db:5432/gialai_forest
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      # Persist uploaded images
+      - backend_uploads:/app/uploads
+
+  # Next.js Frontend Service
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "3000:3000"
+    environment:
+      # Tell the frontend where the API is running
+      # If deploying to a remote server, change this to the server's public IP/Domain
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
+  backend_uploads:
