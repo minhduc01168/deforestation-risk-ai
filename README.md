@@ -61,25 +61,4 @@ The pipeline generates a standardized set of research outputs in the `outputs/` 
 - **Validation Figures:** ROC curves and Feature Importance bar charts.
 - **Performance Tables:** Summaries of AUC, AP, and F1 scores across multiple scenarios.
 
-## Research Team & Contributions
-This project was developed by a team of student researchers with supervision from FPT University:
-- **Pham Duy Long:** Project coordination and lead author.
-- **Nguyen Vu Huy:** Data preparation and reproducibility engineering.
-- **Nguyen Duc Anh:** Data validation and metric evaluation.
-- **Do Nhat Quang:** Geospatial visualization and figure organization.
-- **Tran Dang An:** Methodology validation and project supervision.
-- **Dam Anh Thu:** Statistical data analysis and validation support.
 
-## Citation & DOI
-**DOI: pending Zenodo archive**
-*A permanent DOI will be added after the repository is archived on Zenodo.*
-
-### Instructions for Generating a Permanent DOI:
-1. Connect this GitHub repository to your [Zenodo](https://zenodo.org/) account.
-2. Enable the repository in Zenodo's settings.
-3. Create a **GitHub Release** (e.g., `v1.0.0`).
-4. Zenodo will automatically archive the release and generate a permanent DOI.
-5. Update this README with the resulting badge and link.
-
-## Contact
-For inquiries regarding the data or methodology, please contact **info@deforestation.xyz**.
