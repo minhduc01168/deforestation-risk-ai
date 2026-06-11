@@ -33,7 +33,6 @@ We evaluate and compare three distinct modeling approaches:
 ├── notebooks/              # Google Colab one-click reproduction workflow
 ├── src/                    # Core Python pipeline scripts
 ├── results/                # Reference model outputs and research figures
-├── participation_evidence/ # Internal records of research team contributions
 └── requirements.txt        # Python package dependencies
 ```
 
@@ -70,8 +69,6 @@ This project was developed by a team of student researchers with supervision fro
 - **Do Nhat Quang:** Geospatial visualization and figure organization.
 - **Tran Dang An:** Methodology validation and project supervision.
 - **Dam Anh Thu:** Statistical data analysis and validation support.
-
-For detailed contribution records, see [CONTRIBUTORS.md](./CONTRIBUTORS.md).
 
 ## Citation & DOI
 **DOI: pending Zenodo archive**
