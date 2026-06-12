@@ -1,9 +1,26 @@
 "use client";
 
-import { useMemo, useState, useEffect } from 'react';
-import Map, { Source, Layer, NavigationControl, Marker, Popup } from 'react-map-gl/maplibre';
+import { useMemo, useState, useEffect, useRef } from 'react';
+import Map, { Source, Layer, NavigationControl, Marker, Popup, MapRef } from 'react-map-gl/maplibre';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { MapPin } from 'lucide-react';
+
+const translations = {
+  vi: {
+    reportTitle: "Báo cáo thực địa",
+    dateLabel: "Ngày:",
+    clickHint: "Click để chọn vị trí báo cáo",
+    lossYear: "Năm mất rừng:",
+    elevation: "Độ cao:",
+  },
+  en: {
+    reportTitle: "Field Report",
+    dateLabel: "Date:",
+    clickHint: "Click to select report location",
+    lossYear: "Loss Year:",
+    elevation: "Elevation:",
+  }
+};
 
 export default function InteractiveMap({ 
   currentYear, 
@@ -11,7 +28,10 @@ export default function InteractiveMap({
   isSatellite,
   selectedLocation,
   onLocationSelect,
-  refreshTrigger
+  refreshTrigger,
+  language = 'vi',
+  displayMode = 'point',
+  targetDistrict = 'All'
 }: { 
   currentYear: number;
   filters: any;
@@ -19,7 +39,13 @@ export default function InteractiveMap({
   selectedLocation: { lat: number, lon: number } | null;
   onLocationSelect: (lat: number, lon: number) => void;
   refreshTrigger: number;
+  language?: 'vi' | 'en';
+  displayMode?: 'point' | 'heatmap';
+  targetDistrict?: string;
 }) {
+  const t = translations[language];
+  const mapRef = useRef<MapRef>(null);
+
   const [geoData, setGeoData] = useState<any>(null);
   const [hoverInfo, setHoverInfo] = useState<any>(null);
   const [reports, setReports] = useState<any[]>([]);
@@ -41,6 +67,20 @@ export default function InteractiveMap({
       .then(data => setReports(data))
       .catch(err => console.error("Failed to load reports:", err));
   }, [refreshTrigger]); // re-fetch when refreshTrigger changes
+
+  // Camera FlyTo Effect
+  useEffect(() => {
+    if (!mapRef.current) return;
+    const map = mapRef.current.getMap();
+    
+    if (targetDistrict === 'KBang') {
+      map.flyTo({ center: [108.5, 14.2], zoom: 10, duration: 2500, essential: true });
+    } else if (targetDistrict === 'Mang Yang') {
+      map.flyTo({ center: [108.33, 14.05], zoom: 10.5, duration: 2500, essential: true });
+    } else if (targetDistrict === 'All') {
+      map.flyTo({ center: [108.46, 14.10], zoom: 9.5, duration: 2500, essential: true });
+    }
+  }, [targetDistrict]);
 
   const mapStyle: any = isSatellite 
     ? {
@@ -86,19 +126,24 @@ export default function InteractiveMap({
       expr.push(['>=', ['get', 'treecover2000'], filters.treeCoverMin]);
     }
     
+    if (targetDistrict && targetDistrict !== 'All') {
+      expr.push(['==', ['get', 'district'], targetDistrict]);
+    }
+    
     return expr;
-  }, [currentYear, filters]);
+  }, [currentYear, filters, targetDistrict]);
 
   return (
     <div className="w-full h-full relative">
       <Map
+        ref={mapRef}
         initialViewState={{
           longitude: 108.46,
           latitude: 14.10,
           zoom: 10
         }}
         mapStyle={mapStyle}
-        interactiveLayerIds={['loss-points']}
+        interactiveLayerIds={displayMode === 'point' ? ['loss-points'] : ['loss-heatmap']}
         onMouseMove={(e) => {
           if (e.features && e.features.length > 0) {
             setHoverInfo({
@@ -123,7 +168,8 @@ export default function InteractiveMap({
             <Layer
               id="loss-points"
               type="circle"
-              filter={filterExpression}
+              layout={{ visibility: displayMode === 'point' ? 'visible' : 'none' }}
+              filter={filterExpression as any}
               paint={{
                 'circle-radius': [
                   'interpolate', ['linear'], ['zoom'],
@@ -133,6 +179,35 @@ export default function InteractiveMap({
                 'circle-color': 'rgba(255, 0, 0, 0.2)',
                 'circle-stroke-width': 2,
                 'circle-stroke-color': '#ff0055'
+              }}
+            />
+            <Layer
+              id="loss-heatmap"
+              type="heatmap"
+              layout={{ visibility: displayMode === 'heatmap' ? 'visible' : 'none' }}
+              filter={filterExpression as any}
+              paint={{
+                'heatmap-weight': 1,
+                'heatmap-intensity': [
+                  'interpolate', ['linear'], ['zoom'],
+                  0, 1,
+                  15, 3
+                ],
+                'heatmap-color': [
+                  'interpolate', ['linear'], ['heatmap-density'],
+                  0, 'rgba(0, 0, 255, 0)',
+                  0.2, 'rgb(65, 105, 225)',
+                  0.4, 'rgb(0, 255, 255)',
+                  0.6, 'rgb(0, 255, 0)',
+                  0.8, 'rgb(255, 255, 0)',
+                  1, 'rgb(255, 0, 0)'
+                ],
+                'heatmap-radius': [
+                  'interpolate', ['linear'], ['zoom'],
+                  0, 2,
+                  14, 25
+                ],
+                'heatmap-opacity': 0.8
               }}
             />
           </Source>
@@ -159,12 +234,12 @@ export default function InteractiveMap({
             latitude={report.lat} 
             anchor="bottom"
             onClick={e => {
-              e.stopPropagation();
+              e.originalEvent.stopPropagation();
               setPopupInfo(report);
             }}
           >
-            <div className="text-blue-500 cursor-pointer">
-              <MapPin size={24} />
+            <div className="text-blue-500 cursor-pointer drop-shadow-md hover:text-blue-400 transition-colors">
+              <MapPin size={28} />
             </div>
           </Marker>
         ))}
@@ -178,24 +253,26 @@ export default function InteractiveMap({
             onClose={() => setPopupInfo(null)}
             className="text-black"
           >
-            <div className="p-2 max-w-xs">
-              <p className="font-semibold text-sm mb-1">Báo cáo thực địa</p>
-              <p className="text-xs mb-2">{popupInfo.comment}</p>
+            <div className="p-3 max-w-xs font-sans">
+              <p className="font-bold text-sm mb-2 text-slate-800">{t.reportTitle}</p>
+              <p className="text-sm mb-3 text-slate-600 bg-slate-50 p-2 rounded">{popupInfo.comment}</p>
               {popupInfo.image_url && (
-                <img src={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}${popupInfo.image_url}`} alt="Field" className="w-full h-auto rounded" />
+                <img src={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}${popupInfo.image_url}`} alt="Field" className="w-full h-auto rounded shadow-sm" />
               )}
-              <p className="text-[10px] text-gray-500 mt-2">
-                Ngày: {new Date(popupInfo.created_at).toLocaleString('vi-VN')}
+              <p className="text-[11px] text-slate-400 mt-3 font-medium">
+                {t.dateLabel} {new Date(popupInfo.created_at).toLocaleString(language === 'vi' ? 'vi-VN' : 'en-US')}
               </p>
             </div>
           </Popup>
         )}
 
         {hoverInfo && (
-          <div className="absolute bg-white text-black p-2 rounded shadow-lg pointer-events-none text-xs" style={{ left: hoverInfo.x + 10, top: hoverInfo.y + 10 }}>
-            <p><strong>Loss Year:</strong> {hoverInfo.feature.properties.loss_first_year}</p>
-            <p><strong>Elevation:</strong> {hoverInfo.feature.properties.mean_elevation_m}m</p>
-            <p className="text-gray-500 mt-1 italic">Click để chọn vị trí báo cáo</p>
+          <div className="absolute bg-slate-900/90 text-white p-3 rounded-xl shadow-2xl pointer-events-none text-xs border border-slate-700 backdrop-blur-sm" style={{ left: hoverInfo.x + 15, top: hoverInfo.y + 15 }}>
+            <p className="mb-1"><strong className="text-slate-400">{t.lossYear}</strong> <span className="font-bold text-green-400">{hoverInfo.feature.properties.loss_first_year}</span></p>
+            <p className="mb-2"><strong className="text-slate-400">{t.elevation}</strong> <span className="font-mono text-emerald-400">{hoverInfo.feature.properties.mean_elevation_m}m</span></p>
+            <div className="pt-2 border-t border-slate-700/50 mt-1">
+              <p className="text-slate-500 italic text-[10px]">{t.clickHint}</p>
+            </div>
           </div>
         )}
       </Map>
