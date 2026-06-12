@@ -10,7 +10,8 @@ import AuthModal from '@/components/AuthModal';
 import AiInsightsPanel from '@/components/AiInsightsPanel';
 import AdminDashboard from '@/components/AdminDashboard';
 import { useAuth } from '@/context/AuthContext';
-import { LogOut, User, Sparkles, Lock } from 'lucide-react';
+import { LogOut, User, Sparkles, Lock, Camera, X } from 'lucide-react';
+import { useRef } from 'react';
 
 const translations = {
   vi: {
@@ -36,6 +37,7 @@ const translations = {
     commentLabel: "Nội dung (Comment)",
     commentPlaceholder: "Mô tả hiện trạng...",
     imageLabel: "Hình ảnh minh chứng",
+    uploadPlaceholder: "Nhấn để tải ảnh từ máy",
     submitting: "Đang gửi...",
     submitBtn: "Gửi Báo Cáo",
     floatingLabel: "Diễn biến Mất rừng tính đến",
@@ -73,6 +75,7 @@ const translations = {
     commentLabel: "Comment",
     commentPlaceholder: "Describe the situation...",
     imageLabel: "Evidence Image",
+    uploadPlaceholder: "Click to upload an image",
     submitting: "Submitting...",
     submitBtn: "Submit Report",
     floatingLabel: "Deforestation up to",
@@ -117,9 +120,12 @@ export default function Home() {
   const [selectedLocation, setSelectedLocation] = useState<{lat: number, lon: number} | null>(null);
   const [comment, setComment] = useState("");
   const [file, setFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGettingLocation, setIsGettingLocation] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleGetLocation = () => {
     if (!navigator.geolocation) {
@@ -185,6 +191,10 @@ export default function Home() {
       // Reset form
       setComment("");
       setFile(null);
+      if (imagePreview) {
+        URL.revokeObjectURL(imagePreview);
+        setImagePreview(null);
+      }
       setSelectedLocation(null);
       
       // Trigger map refresh
@@ -482,18 +492,64 @@ export default function Home() {
                         </div>
                         
                         <div>
-                          <label className="text-xs text-slate-400 font-medium">{t.imageLabel}</label>
-                          <input 
-                            type="file" 
-                            accept="image/png, image/jpeg"
-                            className="w-full mt-1 text-xs file:mr-3 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-slate-700 file:text-white hover:file:bg-slate-600 file:cursor-pointer file:transition-colors"
-                            onChange={(e) => {
-                              if (e.target.files && e.target.files[0]) {
-                                setFile(e.target.files[0]);
-                              }
-                            }}
-                            disabled={!selectedLocation || isSubmitting}
-                          />
+                          <label className="text-xs text-slate-400 font-medium mb-1 block">{t.imageLabel}</label>
+                          <div className="relative w-full h-32 mt-1 rounded-xl border-2 border-dashed border-slate-600 bg-slate-800/50 flex items-center justify-center overflow-hidden transition-colors hover:bg-slate-700/50 group">
+                            
+                            {/* Hidden File Input */}
+                            <input 
+                              type="file" 
+                              accept="image/png, image/jpeg, image/jpg"
+                              ref={fileInputRef}
+                              className="hidden"
+                              onChange={(e) => {
+                                if (e.target.files && e.target.files[0]) {
+                                  const selectedFile = e.target.files[0];
+                                  setFile(selectedFile);
+                                  
+                                  // Revoke old object URL to prevent memory leaks
+                                  if (imagePreview) URL.revokeObjectURL(imagePreview);
+                                  setImagePreview(URL.createObjectURL(selectedFile));
+                                }
+                              }}
+                              disabled={!selectedLocation || isSubmitting}
+                            />
+
+                            {/* Image Preview or Upload Placeholder */}
+                            {imagePreview ? (
+                              <>
+                                <img 
+                                  src={imagePreview} 
+                                  alt="Preview" 
+                                  className="w-full h-full object-cover" 
+                                />
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setFile(null);
+                                    if (imagePreview) URL.revokeObjectURL(imagePreview);
+                                    setImagePreview(null);
+                                    if (fileInputRef.current) fileInputRef.current.value = '';
+                                  }}
+                                  className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white p-1 rounded-full shadow-lg transition-transform hover:scale-110"
+                                >
+                                  <X size={14} strokeWidth={3} />
+                                </button>
+                              </>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={() => fileInputRef.current?.click()}
+                                disabled={!selectedLocation || isSubmitting}
+                                className={`flex flex-col items-center justify-center w-full h-full text-slate-500 transition-colors ${
+                                  !selectedLocation || isSubmitting ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:text-green-400'
+                                }`}
+                              >
+                                <Camera size={28} className="mb-2" />
+                                <span className="text-[10px] font-medium tracking-wide uppercase">{t.uploadPlaceholder}</span>
+                              </button>
+                            )}
+                          </div>
                         </div>
                         
                         <button 
