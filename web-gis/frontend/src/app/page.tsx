@@ -8,6 +8,7 @@ const MapComponent = dynamic(() => import('@/components/Map'), { ssr: false });
 import AboutTab from '@/components/AboutTab';
 import AuthModal from '@/components/AuthModal';
 import AiInsightsPanel from '@/components/AiInsightsPanel';
+import AdminDashboard from '@/components/AdminDashboard';
 import { useAuth } from '@/context/AuthContext';
 import { LogOut, User, Sparkles, Lock } from 'lucide-react';
 
@@ -17,6 +18,7 @@ const translations = {
     subtitle: "Hệ thống Cảnh báo & Giám sát Mất rừng",
     mapTab: "Bản đồ GIS",
     aboutTab: "Giới thiệu",
+    dashboardTab: "Quản lý Báo cáo",
     satellite: "Ảnh Vệ tinh (Satellite)",
     yearLabel: "Năm phân tích:",
     filterTitle: "Bộ lọc Môi trường",
@@ -25,7 +27,10 @@ const translations = {
     treeCover: "Độ che phủ rừng (Tree Cover 2000) tối thiểu",
     rainfall: "Lượng mưa tối đa",
     reportTitle: "Báo Cáo Thực Địa (Check-in)",
-    clickToReport: "Click vào một điểm trên bản đồ để bắt đầu báo cáo.",
+    clickToReport: "Nhấn nút bên dưới để lấy vị trí hiện tại hoặc click vào bản đồ.",
+    getLocation: "📍 Lấy vị trí của tôi",
+    gettingLocation: "Đang dò GPS...",
+    locationError: "Không thể lấy vị trí. Vui lòng bật GPS và cấp quyền cho trình duyệt.",
     selectedLabel: "Đã chọn:",
     cancel: "Hủy",
     commentLabel: "Nội dung (Comment)",
@@ -50,6 +55,7 @@ const translations = {
     subtitle: "Deforestation Monitoring & Warning System",
     mapTab: "GIS Map",
     aboutTab: "About Project",
+    dashboardTab: "Admin Dashboard",
     satellite: "Satellite Imagery",
     yearLabel: "Analysis Year:",
     filterTitle: "Environmental Filters",
@@ -58,7 +64,10 @@ const translations = {
     treeCover: "Min Tree Cover 2000",
     rainfall: "Max Rainfall",
     reportTitle: "Field Report (Check-in)",
-    clickToReport: "Click on the map to select a location for reporting.",
+    clickToReport: "Click the button below to get your location or click on the map.",
+    getLocation: "📍 Get My Location",
+    gettingLocation: "Searching GPS...",
+    locationError: "Cannot get location. Please enable GPS and allow browser permissions.",
     selectedLabel: "Selected:",
     cancel: "Cancel",
     commentLabel: "Comment",
@@ -96,8 +105,8 @@ export default function Home() {
   const [slopeMax, setSlopeMax] = useState<number>(90);
   const [treeCoverMin, setTreeCoverMin] = useState<number>(0);
 
-  // Tab State: 'map' or 'about'
-  const [activeTab, setActiveTab] = useState<'map' | 'about'>('map');
+  // Tab State: 'map' or 'about' or 'dashboard'
+  const [activeTab, setActiveTab] = useState<'map' | 'about' | 'dashboard'>('map');
   const [displayMode, setDisplayMode] = useState<'point' | 'heatmap'>('point');
   
   // AI Presentation Mode State
@@ -109,7 +118,31 @@ export default function Home() {
   const [comment, setComment] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isGettingLocation, setIsGettingLocation] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  const handleGetLocation = () => {
+    if (!navigator.geolocation) {
+      alert(t.locationError);
+      return;
+    }
+    setIsGettingLocation(true);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setSelectedLocation({
+          lat: position.coords.latitude,
+          lon: position.coords.longitude
+        });
+        setIsGettingLocation(false);
+      },
+      (error) => {
+        console.error("Error getting location:", error);
+        alert(t.locationError);
+        setIsGettingLocation(false);
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
+  };
 
   const handleSubmitReport = async () => {
     if (!user || !token) {
@@ -165,22 +198,26 @@ export default function Home() {
   };
 
   return (
-    <div className="flex flex-col h-screen w-full bg-slate-900 text-white overflow-hidden font-sans">
-      
-      {/* Top Navigation Bar */}
-      <nav className="h-16 bg-slate-800 border-b border-slate-700 flex items-center justify-between px-6 flex-shrink-0 z-20 shadow-md">
-        <div className="flex items-center space-x-8">
-          <div>
-            <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-green-400 to-emerald-600">
-              {t.title}
-            </h1>
-            <p className="text-[10px] text-slate-400 uppercase tracking-widest">{t.subtitle}</p>
+    <div className="flex flex-col h-screen bg-slate-900 text-slate-100 font-sans">
+      {/* Top Header */}
+      <div className="h-auto md:h-16 border-b border-slate-700 bg-slate-800/80 backdrop-blur flex flex-col md:flex-row items-start md:items-center justify-between px-4 md:px-6 shadow-md z-20 py-3 md:py-0">
+        <div className="flex items-center justify-between w-full md:w-auto mb-3 md:mb-0">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-br from-green-500 to-emerald-700 rounded-xl flex items-center justify-center shadow-lg shadow-green-500/30">
+              <span className="font-bold text-white text-lg">GL</span>
+            </div>
+            <div>
+              <h1 className="font-bold text-slate-100 text-base md:text-lg leading-tight">{t.title}</h1>
+              <p className="text-xs text-green-400 font-medium hidden md:block">{t.subtitle}</p>
+            </div>
           </div>
-          
-          <div className="hidden md:flex space-x-2">
+        </div>
+
+        <div className="flex flex-col md:flex-row items-stretch md:items-center gap-3 md:gap-6 w-full md:w-auto">
+          <div className="flex bg-slate-800 rounded-xl p-1 border border-slate-700 w-full md:w-auto">
             <button 
               onClick={() => setActiveTab('map')}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+              className={`flex-1 md:flex-none px-3 md:px-4 py-2 rounded-lg text-xs md:text-sm font-medium transition-all duration-200 ${
                 activeTab === 'map' 
                   ? 'bg-slate-700 text-green-400 shadow-inner' 
                   : 'text-slate-400 hover:text-slate-200 hover:bg-slate-700/50'
@@ -190,7 +227,7 @@ export default function Home() {
             </button>
             <button 
               onClick={() => setActiveTab('about')}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+              className={`flex-1 md:flex-none px-3 md:px-4 py-2 rounded-lg text-xs md:text-sm font-medium transition-all duration-200 ${
                 activeTab === 'about' 
                   ? 'bg-slate-700 text-green-400 shadow-inner' 
                   : 'text-slate-400 hover:text-slate-200 hover:bg-slate-700/50'
@@ -198,11 +235,23 @@ export default function Home() {
             >
               {t.aboutTab}
             </button>
+            {user?.role === 'admin' && (
+              <button 
+                onClick={() => setActiveTab('dashboard')}
+                className={`px-3 md:px-4 py-2 rounded-lg text-xs md:text-sm font-medium transition-all duration-200 ${
+                  activeTab === 'dashboard' 
+                    ? 'bg-slate-700 text-blue-400 shadow-inner' 
+                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-700/50'
+                }`}
+              >
+                {t.dashboardTab}
+              </button>
+            )}
           </div>
         </div>
 
         {/* User & Language Toggle */}
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center gap-2 md:gap-4 mt-4 md:mt-0">
           <button 
             onClick={() => {
               setActiveTab('map');
@@ -222,7 +271,7 @@ export default function Home() {
             <div className="flex items-center space-x-3 bg-slate-900/50 px-3 py-1.5 rounded-lg border border-slate-700">
               <div className="flex items-center space-x-2 text-sm text-green-400 font-medium">
                 <User size={16} />
-                <span>{user.username}</span>
+                <span className="hidden sm:inline">{user.username}</span>
               </div>
               <button 
                 onClick={logout}
@@ -260,15 +309,14 @@ export default function Home() {
             </button>
           </div>
         </div>
-      </nav>
+      </div>
 
-      {/* Main Body */}
-      <div className="flex-1 flex overflow-hidden">
-        
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col md:flex-row overflow-hidden relative">
         {activeTab === 'map' ? (
           <>
             {/* Sidebar Controls */}
-            <div className="w-80 bg-slate-800 flex flex-col shadow-xl z-10 flex-shrink-0 border-r border-slate-700 overflow-y-auto">
+            <div className="w-full md:w-80 bg-slate-800 flex flex-col shadow-xl z-10 flex-shrink-0 border-t md:border-t-0 md:border-r border-slate-700 overflow-y-auto max-h-[50vh] md:max-h-none order-last md:order-first">
               <div className="p-6 space-y-8">
                 
                 {/* Satellite toggle */}
@@ -393,8 +441,19 @@ export default function Home() {
                   ) : (
                     <>
                       {!selectedLocation ? (
-                        <div className="p-4 border border-dashed border-slate-600 rounded-lg text-center text-xs text-slate-400 mb-4 bg-slate-800">
-                          {t.clickToReport}
+                        <div className="p-4 border border-dashed border-slate-600 rounded-lg text-center flex flex-col items-center gap-3 bg-slate-800 mb-4">
+                          <span className="text-xs text-slate-400">{t.clickToReport}</span>
+                          <button 
+                            onClick={handleGetLocation}
+                            disabled={isGettingLocation}
+                            className={`w-full py-2 rounded-lg text-sm font-bold transition-all shadow-lg ${
+                              isGettingLocation
+                                ? 'bg-slate-700 text-slate-500 cursor-not-allowed'
+                                : 'bg-blue-600 text-white hover:bg-blue-500 hover:-translate-y-0.5'
+                            }`}
+                          >
+                            {isGettingLocation ? t.gettingLocation : t.getLocation}
+                          </button>
                         </div>
                       ) : (
                         <div className="mb-4 text-xs bg-green-900/30 border border-green-800/50 p-2 rounded flex justify-between items-center">
@@ -456,7 +515,7 @@ export default function Home() {
             </div>
 
             {/* Main Map Area */}
-            <div className="flex-1 relative">
+            <div className="flex-1 relative order-first md:order-last h-[50vh] md:h-auto">
               <MapComponent 
                 currentYear={currentYear} 
                 filters={{ elevationMax, rainfallMax, slopeMax, treeCoverMin }} 
@@ -486,9 +545,21 @@ export default function Home() {
               />
             )}
           </>
+        ) : activeTab === 'dashboard' ? (
+          <div className="flex-1 overflow-y-auto bg-slate-900/50 p-4 md:p-8 flex justify-center">
+            <div className="w-full h-full max-w-6xl mt-2 md:mt-6 mb-12 relative">
+              <AdminDashboard 
+                language={language}
+                onViewOnMap={(lat, lon) => {
+                  setSelectedLocation({lat, lon});
+                  setActiveTab('map');
+                }}
+              />
+            </div>
+          </div>
         ) : (
-          <div className="flex-1 overflow-y-auto bg-slate-900/50 p-8 flex justify-center">
-            <div className="w-full max-w-4xl bg-slate-800 border border-slate-700 rounded-2xl shadow-2xl overflow-hidden mt-6 mb-12 relative">
+          <div className="flex-1 overflow-y-auto bg-slate-900/50 p-4 md:p-8 flex justify-center">
+            <div className="w-full max-w-4xl bg-slate-800 border border-slate-700 rounded-2xl shadow-2xl overflow-hidden mt-2 md:mt-6 mb-12 relative">
               <AboutTab language={language} />
             </div>
           </div>
