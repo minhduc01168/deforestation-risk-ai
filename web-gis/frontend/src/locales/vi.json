@@ -1,0 +1,12 @@
+{
+  "nav": {
+    "home": "Trang chủ",
+    "about": "Về VIGIL",
+    "publication": "Xuất bản",
+    "contact": "Liên hệ"
+  },
+  "footer": {
+    "description": "Dự án giám sát và cảnh báo rủi ro phá rừng bằng AI.",
+    "rights": "© 2026 VIGIL Web-GIS. Đã đăng ký bản quyền."
+  }
+}

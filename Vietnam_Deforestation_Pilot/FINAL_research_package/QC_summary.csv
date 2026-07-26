@@ -1,0 +1,2 @@
+rows,cols,district_counts,split_counts,pos_rate_overall_label_std,pos_rate_by_district,missing_core,duplicate_lonlat_rows
+6000,30,"{'KBang': 4000, 'MangYang': 2000}","{'train': 4788, 'test': 1212}",0.5,"{'KBang': 0.5, 'MangYang': 0.5}","{'lon': 0, 'lat': 0, 'treecover2000': 0, 'mean_elevation_m': 0, 'mean_slope_deg': 0, 'rain_last12m_total_mm': 0, 'rain_mean_annual_2000_2024_mm': 0, 'loss_any_2001_2024': 0, 'loss_first_year': 0}",0

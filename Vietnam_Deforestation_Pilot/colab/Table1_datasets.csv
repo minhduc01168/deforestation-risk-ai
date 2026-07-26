@@ -1,0 +1,4 @@
+Dataset,Layers/Variables,Native resolution,Time span,Role in pipeline
+Hansen Global Forest Change (v1.12),"treecover2000, lossyear-derived loss labels",30 m,2000 baseline; loss 2001–2024,Forest baseline + historical loss labels
+SRTM,"mean_elevation_m, mean_slope_deg",30–90 m,Static,Terrain predictors
+CHIRPS daily (aggregated),"rain_last12m_total_mm, rain_mean_annual_2000_2024_mm",~5 km,2000–2025,Rainfall predictors

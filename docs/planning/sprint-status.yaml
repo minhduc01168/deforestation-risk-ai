@@ -1,0 +1,58 @@
+# generated: 2026-07-26T10:47:00+07:00
+# last_updated: 2026-07-26T10:47:00+07:00
+# project: VIGIL Web-GIS
+# project_key: NOKEY
+# tracking_system: file-system
+# story_location: docs/planning/stories
+
+# STATUS DEFINITIONS:
+# ==================
+# Epic Status:
+#   - backlog: Epic not yet started
+#   - in-progress: Epic actively being worked on
+#   - done: All stories in epic completed
+#
+# Epic Status Transitions:
+#   - backlog → in-progress: Automatically when first story is created (via create-story)
+#   - in-progress → done: Manually when all stories reach 'done' status
+#
+# Story Status:
+#   - backlog: Story only exists in epic file
+#   - ready-for-dev: Story file created in stories folder
+#   - in-progress: Developer actively working on implementation
+#   - review: Ready for code review (via Dev's code-review workflow)
+#   - done: Story completed
+#
+# Retrospective Status:
+#   - optional: Can be completed but not required
+#   - done: Retrospective has been completed
+
+generated: 2026-07-26T10:47:00+07:00
+last_updated: 2026-07-26T10:47:00+07:00
+project: VIGIL Web-GIS
+project_key: NOKEY
+tracking_system: file-system
+story_location: docs/planning/stories
+
+development_status:
+  epic-1: in-progress
+  1-1-tich-hop-da-ngon-ngu-va-bo-component-chung: done
+  1-2-trang-chu-gioi-thieu-tong-quan: ready-for-dev
+  1-3-tich-hop-facebook-feed-tren-trang-chu: backlog
+  1-4-trang-ve-vigil: backlog
+  1-5-trang-xuat-ban: backlog
+  1-6-trang-lien-he-va-gop-y: backlog
+  epic-1-retrospective: optional
+  
+  epic-2: backlog
+  2-1-hien-thi-vung-rui-ro-theo-polygon: backlog
+  2-2-bo-loc-cac-lop-du-lieu-ve-tinh: backlog
+  2-3-tim-kiem-dia-diem-bang-toa-do: backlog
+  2-4-them-layer-khu-vuc-quy-hoach: backlog
+  2-5-huong-dan-doc-ban-do: backlog
+  epic-2-retrospective: optional
+  
+  epic-3: backlog
+  3-1-giao-dien-popup-check-in-tren-ban-do: backlog
+  3-2-api-bao-cao-an-danh-va-rate-limiting: backlog
+  epic-3-retrospective: optional

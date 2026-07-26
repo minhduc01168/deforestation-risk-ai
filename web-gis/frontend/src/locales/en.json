@@ -1,0 +1,12 @@
+{
+  "nav": {
+    "home": "Home",
+    "about": "About VIGIL",
+    "publication": "Our Publication",
+    "contact": "Contact Us"
+  },
+  "footer": {
+    "description": "A project focused on monitoring and forecasting deforestation risks using AI.",
+    "rights": "© 2026 VIGIL Web-GIS. All rights reserved."
+  }
+}

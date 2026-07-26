@@ -1,0 +1,21 @@
+Master table build report
+Inputs:
+- KBang_train_samples_v1 Final.csv  rows=3200
+- KBang_test_samples_v1 final.csv   rows=800
+- MangYang_train_samples_v1.csv     rows=1588
+- MangYang_test_samples_v1.csv      rows=412
+
+Roads used (clipped):
+- kbang_roads.geojson  lines=4393
+- mangyang_roads.geojson lines=4275
+
+Method:
+- Parsed lon/lat from '.geo' column
+- Computed min Euclidean distance (meters) in EPSG:32648 to nearest road line
+- Added columns: lon, lat, dist_to_nearest_road_m
+
+Outputs:
+- KBang_train_master.csv
+- KBang_test_master.csv
+- MangYang_train_master.csv
+- MangYang_test_master.csv

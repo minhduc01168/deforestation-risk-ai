@@ -1,0 +1,5 @@
+treecover2000
+mean_elevation_m
+mean_slope_deg
+rain_last12m_total_mm
+rain_mean_annual_2000_2024_mm
