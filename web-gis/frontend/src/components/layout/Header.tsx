@@ -12,19 +12,23 @@ export default function Header() {
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         <div className="flex items-center gap-6">
           <Link href="/" className="flex items-center space-x-2">
+            <img src="/images/logo.png" alt="VIGIL" className="h-8 w-8 object-contain" />
             <span className="text-xl font-bold text-green-700">VIGIL</span>
           </Link>
           <nav className="hidden md:flex gap-6">
             <Link href="/" className="text-sm font-medium text-gray-700 hover:text-green-600 transition-colors">
               {t('nav.home')}
             </Link>
-            <Link href="#about" className="text-sm font-medium text-gray-700 hover:text-green-600 transition-colors">
+            <Link href="/map" className="text-sm font-medium text-gray-700 hover:text-green-600 transition-colors">
+              {t('nav.map')}
+            </Link>
+            <Link href="/about" className="text-sm font-medium text-gray-700 hover:text-green-600 transition-colors">
               {t('nav.about')}
             </Link>
-            <Link href="#publication" className="text-sm font-medium text-gray-700 hover:text-green-600 transition-colors">
+            <Link href="/publication" className="text-sm font-medium text-gray-700 hover:text-green-600 transition-colors">
               {t('nav.publication')}
             </Link>
-            <Link href="#contact" className="text-sm font-medium text-gray-700 hover:text-green-600 transition-colors">
+            <Link href="/contact" className="text-sm font-medium text-gray-700 hover:text-green-600 transition-colors">
               {t('nav.contact')}
             </Link>
           </nav>

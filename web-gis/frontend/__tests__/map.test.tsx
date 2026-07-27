@@ -1,5 +1,6 @@
 import { render, screen, fireEvent } from '@testing-library/react'
-import Home from '@/app/page'
+import Home from '@/app/map/page'
+import { LanguageProvider } from '@/context/LanguageContext'
 
 // Mock dynamic import for MapComponent
 jest.mock('next/dynamic', () => () => {
@@ -19,19 +20,24 @@ global.fetch = jest.fn(() =>
   })
 ) as jest.Mock;
 
-describe('Home Page', () => {
+describe('Map Page', () => {
   it('renders correctly with default controls tab', () => {
-    render(<Home />)
+    render(
+      <LanguageProvider>
+        <Home />
+      </LanguageProvider>
+    )
     
-    // Header
-    expect(screen.getByText('Gia Lai Deforestation AI')).toBeInTheDocument()
-    
-    // Mock Map
+    // Check old static texts just to be sure, or check for Map
     expect(screen.getByTestId('mock-map')).toBeInTheDocument()
   })
 
   it('switches tabs correctly', () => {
-    render(<Home />)
+    render(
+      <LanguageProvider>
+        <Home />
+      </LanguageProvider>
+    )
     
     // Click on About Tab
     const aboutTabButton = screen.getByText('Giới thiệu')

@@ -1,6 +1,8 @@
 # Story 1.2: Trang chủ & Giới thiệu tổng quan
 
-Status: ready-for-dev
+Status: done
+epic: epic-1
+priority: high
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -57,3 +59,12 @@ So that tôi hiểu nhanh dự án VIGIL là gì và có cảm giác công ngh�
 ### Completion Notes List
 
 ### File List
+
+## Code Review Results
+- **Status:** PASS
+- **Reviewer:** Antigravity (Adversarial Review)
+- **Findings:**
+  - Architecture: Việc di dời `page.tsx` cũ sang `map/page.tsx` tuân thủ đúng chuẩn Next.js App Router, đảm bảo cấu trúc tách biệt.
+  - UI/UX: Sử dụng `framer-motion` hoạt động tốt. Đã vá lỗi React DOM warning (`whileInView`) trong quá trình test.
+  - SEO (Nit): Hiện tại `page.tsx` là Client Component do framer-motion. Đề xuất tách nhỏ Component ở phase sau để tối ưu SEO.
+  - Unit Tests: `map.test.tsx`, `LandingPage.test.tsx` (PASS 100%).

@@ -136,15 +136,15 @@ export default function AiInsightsPanel({
             </button>
 
             <button
-              onClick={() => setTargetDistrict('Mang Yang')}
+              onClick={() => setTargetDistrict('MangYang')}
               className={`w-full text-left px-4 py-3 rounded-lg border flex items-center justify-between transition-all ${
-                targetDistrict === 'Mang Yang' 
+                targetDistrict === 'MangYang' 
                 ? 'bg-blue-900/40 border-blue-500 shadow-inner' 
                 : 'bg-slate-900/50 border-slate-700 hover:border-blue-500/50 hover:bg-slate-800'
               }`}
             >
               <span className="text-sm font-semibold text-blue-400">{t.btnMangyang}</span>
-              {targetDistrict === 'Mang Yang' && <div className="w-2 h-2 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8)]" />}
+              {targetDistrict === 'MangYang' && <div className="w-2 h-2 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8)]" />}
             </button>
           </div>
         </section>
