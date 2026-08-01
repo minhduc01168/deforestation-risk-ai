@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import dynamic from 'next/dynamic';
+import Link from 'next/link';
 
 // Dynamically import map to avoid SSR issues
 const MapComponent = dynamic(() => import('@/components/Map'), { ssr: false });
@@ -11,18 +12,21 @@ import AiInsightsPanel from '@/components/AiInsightsPanel';
 import AdminDashboard from '@/components/AdminDashboard';
 import MapGuideModal from '@/components/MapGuideModal';
 import { useAuth } from '@/context/AuthContext';
-import { LogOut, User, Sparkles, Lock, Camera, X } from 'lucide-react';
-import { useRef } from 'react';
+import { useLanguage } from '@/context/LanguageContext';
+import { LogOut, User, Sparkles, Lock, Camera, X, Home as HomeIcon } from 'lucide-react';
 
 const translations = {
   vi: {
-    title: "Gia Lai Deforestation AI",
+    title: "Giám sát Mất rừng Gia Lai",
     subtitle: "Hệ thống Cảnh báo & Giám sát Mất rừng",
+    homeTab: "Trang chủ",
     mapTab: "Bản đồ GIS",
     aboutTab: "Giới thiệu",
+    publicationTab: "Công bố",
+    contactTab: "Liên hệ",
     dashboardTab: "Quản lý Báo cáo",
-    satellite: "Ảnh Vệ tinh (Satellite)",
-    layersTitle: "Lớp dữ liệu (Layers)",
+    satellite: "Ảnh Vệ tinh",
+    layersTitle: "Lớp dữ liệu",
     searchTitle: "Tìm kiếm Tọa độ",
     searchPlaceholder: "Ví dụ: 14.2, 108.5",
     invalidCoords: "Tọa độ không hợp lệ. Vui lòng nhập vĩ độ, kinh độ.",
@@ -37,16 +41,16 @@ const translations = {
     filterTitle: "Bộ lọc Môi trường",
     elevation: "Độ cao tối đa",
     slope: "Độ dốc tối đa",
-    treeCover: "Độ che phủ rừng (Tree Cover 2000) tối thiểu",
+    treeCover: "Độ che phủ rừng tối thiểu",
     rainfall: "Lượng mưa tối đa",
-    reportTitle: "Báo Cáo Thực Địa (Check-in)",
+    reportTitle: "Báo Cáo Thực Địa",
     clickToReport: "Nhấn nút bên dưới để lấy vị trí hiện tại hoặc click vào bản đồ.",
     getLocation: "📍 Lấy vị trí của tôi",
     gettingLocation: "Đang dò GPS...",
     locationError: "Không thể lấy vị trí. Vui lòng bật GPS và cấp quyền cho trình duyệt.",
     selectedLabel: "Đã chọn:",
     cancel: "Hủy",
-    commentLabel: "Nội dung (Comment)",
+    commentLabel: "Nội dung mô tả",
     commentPlaceholder: "Mô tả hiện trạng...",
     imageLabel: "Hình ảnh minh chứng",
     uploadPlaceholder: "Nhấn để tải ảnh từ máy",
@@ -67,8 +71,11 @@ const translations = {
   en: {
     title: "Gia Lai Deforestation AI",
     subtitle: "Deforestation Monitoring & Warning System",
+    homeTab: "Home",
     mapTab: "GIS Map",
     aboutTab: "About Project",
+    publicationTab: "Publication",
+    contactTab: "Contact",
     dashboardTab: "Admin Dashboard",
     satellite: "Satellite Imagery",
     layersTitle: "Map Layers",
@@ -117,10 +124,10 @@ const translations = {
 
 export default function Home() {
   const { user, token, logout } = useAuth();
+  const { language } = useLanguage();
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showHowToReadMap, setShowHowToReadMap] = useState(false);
 
-  const [language, setLanguage] = useState<'vi' | 'en'>('vi');
   const t = translations[language];
 
   const [currentYear, setCurrentYear] = useState<number>(2024);
@@ -257,125 +264,28 @@ export default function Home() {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-slate-900 text-slate-100 font-sans">
-      {/* Top Header */}
-      <div className="h-auto md:h-16 border-b border-slate-700 bg-slate-800/80 backdrop-blur flex flex-col md:flex-row items-start md:items-center justify-between px-4 md:px-6 shadow-md z-20 py-3 md:py-0">
-        <div className="flex items-center justify-between w-full md:w-auto mb-3 md:mb-0">
-          <div className="flex items-center gap-3">
-            <img src="/images/logo.png" alt="VIGIL Logo" className="w-8 h-8 md:w-10 md:h-10 rounded-xl shadow-lg object-cover bg-white p-1" />
-            <div>
-              <h1 className="font-bold text-slate-100 text-base md:text-lg leading-tight">{t.title}</h1>
-              <p className="text-xs text-green-400 font-medium hidden md:block">{t.subtitle}</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="flex flex-col md:flex-row items-stretch md:items-center gap-3 md:gap-6 w-full md:w-auto">
-          <div className="flex bg-slate-800 rounded-xl p-1 border border-slate-700 w-full md:w-auto">
-            <button 
-              onClick={() => setActiveTab('map')}
-              className={`flex-1 md:flex-none px-3 md:px-4 py-2 rounded-lg text-xs md:text-sm font-medium transition-all duration-200 ${
-                activeTab === 'map' 
-                  ? 'bg-slate-700 text-green-400 shadow-inner' 
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-700/50'
-              }`}
-            >
-              {t.mapTab}
-            </button>
-            <button 
-              onClick={() => setActiveTab('about')}
-              className={`flex-1 md:flex-none px-3 md:px-4 py-2 rounded-lg text-xs md:text-sm font-medium transition-all duration-200 ${
-                activeTab === 'about' 
-                  ? 'bg-slate-700 text-green-400 shadow-inner' 
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-700/50'
-              }`}
-            >
-              {t.aboutTab}
-            </button>
-            {user?.role === 'admin' && (
-              <button 
-                onClick={() => setActiveTab('dashboard')}
-                className={`px-3 md:px-4 py-2 rounded-lg text-xs md:text-sm font-medium transition-all duration-200 ${
-                  activeTab === 'dashboard' 
-                    ? 'bg-slate-700 text-blue-400 shadow-inner' 
-                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-700/50'
-                }`}
-              >
-                {t.dashboardTab}
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* User & Language Toggle */}
-        <div className="flex items-center gap-2 md:gap-4 mt-4 md:mt-0">
-          <button 
-            onClick={() => {
-              setActiveTab('map');
-              setShowAiPanel(!showAiPanel);
-            }}
-            className={`flex items-center space-x-2 px-3 py-1.5 rounded-lg text-sm font-semibold transition-all shadow-lg border ${
-              showAiPanel 
-                ? 'bg-yellow-500 text-slate-900 border-yellow-400' 
-                : 'bg-slate-900/50 text-yellow-400 border-slate-700 hover:bg-slate-800 hover:border-yellow-500/50'
-            }`}
-          >
-            <Sparkles size={16} />
-            <span className="hidden sm:inline">AI Insights</span>
-          </button>
-
-          {user ? (
-            <div className="flex items-center space-x-3 bg-slate-900/50 px-3 py-1.5 rounded-lg border border-slate-700">
-              <div className="flex items-center space-x-2 text-sm text-green-400 font-medium">
-                <User size={16} />
-                <span className="hidden sm:inline">{user.username}</span>
-              </div>
-              <button 
-                onClick={logout}
-                className="text-xs text-slate-400 hover:text-red-400 transition-colors flex items-center"
-                title={t.logout}
-              >
-                <LogOut size={16} />
-              </button>
-            </div>
-          ) : (
-            <button 
-              onClick={() => setShowAuthModal(true)}
-              className="px-4 py-1.5 bg-green-600 hover:bg-green-500 text-white rounded-lg text-sm font-semibold transition-colors shadow-lg"
-            >
-              {t.login}
-            </button>
-          )}
-
-          <div className="flex items-center space-x-1 bg-slate-900 p-1 rounded-lg border border-slate-700">
-            <button 
-              onClick={() => setLanguage('vi')} 
-              className={`px-3 py-1 rounded-md text-xs font-bold transition-all duration-200 ${
-                language === 'vi' ? 'bg-green-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-300'
-              }`}
-            >
-              VI
-            </button>
-            <button 
-              onClick={() => setLanguage('en')} 
-              className={`px-3 py-1 rounded-md text-xs font-bold transition-all duration-200 ${
-                language === 'en' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-300'
-              }`}
-            >
-              EN
-            </button>
-          </div>
-        </div>
-      </div>
-
+    <div className="flex flex-col h-[calc(100vh-64px)] bg-slate-900 text-slate-100 font-sans overflow-hidden">
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col md:flex-row overflow-hidden relative">
         {activeTab === 'map' ? (
           <>
             {/* Sidebar Controls */}
-            <div className="w-full md:w-80 bg-slate-800 flex flex-col shadow-xl z-10 flex-shrink-0 border-t md:border-t-0 md:border-r border-slate-700 overflow-y-auto max-h-[50vh] md:max-h-none order-last md:order-first">
-              <div className="p-6 space-y-8">
+            <div className="w-full md:w-80 bg-slate-800/95 backdrop-blur-md flex flex-col shadow-xl z-10 flex-shrink-0 border-t md:border-t-0 md:border-r border-slate-700 overflow-y-auto max-h-[50vh] md:max-h-none order-last md:order-first">
+              <div className="p-6 space-y-6">
                 
+                {/* AI Insights Quick Toggle Button */}
+                <button 
+                  onClick={() => setShowAiPanel(!showAiPanel)}
+                  className={`w-full flex items-center justify-center space-x-2 py-2.5 px-4 rounded-xl text-xs font-bold transition-all shadow-md border ${
+                    showAiPanel 
+                      ? 'bg-yellow-500 text-slate-900 border-yellow-400 shadow-yellow-500/20' 
+                      : 'bg-slate-900/80 text-yellow-400 border-slate-700 hover:bg-slate-700 hover:border-yellow-500/50'
+                  }`}
+                >
+                  <Sparkles size={16} />
+                  <span>{showAiPanel ? (language === 'vi' ? 'Đóng AI Insights' : 'Close AI Insights') : (language === 'vi' ? 'Bật AI Insights' : 'AI Insights')}</span>
+                </button>
+
                 {/* Satellite toggle */}
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium text-slate-300">{t.satellite}</span>
@@ -388,18 +298,18 @@ export default function Home() {
                 </div>
 
                 {/* Display Mode toggle */}
-                <div className="flex items-center justify-between mt-2 mb-4">
-                  <span className="text-sm font-medium text-slate-300">{t.displayMode}</span>
-                  <div className="flex bg-slate-900/50 rounded-lg p-1 border border-slate-700/50">
+                <div className="flex items-center justify-between mt-2 mb-4 gap-2">
+                  <span className="text-xs font-semibold text-slate-300 whitespace-nowrap">{t.displayMode}</span>
+                  <div className="flex bg-slate-900/60 rounded-xl p-1 border border-slate-700/60 flex-shrink-0">
                     <button 
                       onClick={() => setDisplayMode('point')}
-                      className={`px-3 py-1 text-xs font-semibold rounded-md transition-colors ${displayMode === 'point' ? 'bg-slate-700 text-green-400 shadow-sm' : 'text-slate-500 hover:text-slate-300'}`}
+                      className={`px-3 py-1 text-xs font-semibold rounded-lg transition-all ${displayMode === 'point' ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'}`}
                     >
                       {t.pointMode}
                     </button>
                     <button 
                       onClick={() => setDisplayMode('heatmap')}
-                      className={`px-3 py-1 text-xs font-semibold rounded-md transition-colors ${displayMode === 'heatmap' ? 'bg-slate-700 text-green-400 shadow-sm' : 'text-slate-500 hover:text-slate-300'}`}
+                      className={`px-3 py-1 text-xs font-semibold rounded-lg transition-all ${displayMode === 'heatmap' ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'}`}
                     >
                       {t.heatmapMode}
                     </button>
@@ -408,18 +318,18 @@ export default function Home() {
 
                 {/* Coordinate Search */}
                 <div className="bg-slate-900/50 p-4 rounded-xl border border-slate-700/50">
-                  <h3 className="text-sm font-bold text-slate-200 mb-3 uppercase tracking-wider">{t.searchTitle}</h3>
-                  <form onSubmit={handleSearchSubmit} className="flex gap-2">
+                  <h3 className="text-xs font-bold text-slate-300 mb-3 uppercase tracking-wider">{t.searchTitle}</h3>
+                  <form onSubmit={handleSearchSubmit} className="relative flex items-center w-full">
                     <input 
                       type="text" 
                       value={searchInput}
                       onChange={(e) => setSearchInput(e.target.value)}
                       placeholder={t.searchPlaceholder}
-                      className="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-green-500 transition-colors"
+                      className="w-full bg-slate-800/80 border border-slate-700 rounded-xl pl-3 pr-14 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-emerald-500 transition-all shadow-inner placeholder:text-slate-500"
                     />
                     <button 
                       type="submit"
-                      className="bg-green-600 hover:bg-green-500 text-white rounded-lg px-4 py-2 text-sm font-semibold transition-colors shadow-lg"
+                      className="absolute right-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg px-3 py-1.5 text-xs font-bold transition-all shadow-md active:scale-95"
                     >
                       GO
                     </button>
@@ -488,120 +398,116 @@ export default function Home() {
                 </div>
                 */}
 
-                {/* Time Slider */}
-                <div className="bg-slate-900/50 p-4 rounded-xl border border-slate-700/50">
-                  <div className="flex justify-between text-sm mb-3">
-                    <span className="text-slate-300">{t.yearLabel}</span>
-                    <span className="font-bold text-green-400 bg-green-400/10 px-2 py-0.5 rounded text-xs">{currentYear}</span>
+                {/* Time Slider Card */}
+                <div className="bg-slate-900/80 p-4 rounded-2xl border border-slate-700/60 shadow-lg">
+                  <div className="flex justify-between items-center text-sm mb-3">
+                    <span className="text-slate-300 font-semibold">{t.yearLabel}</span>
+                    <span className="font-black text-amber-400 bg-amber-400/10 border border-amber-400/30 px-2.5 py-0.5 rounded-lg text-xs font-mono">{currentYear}</span>
                   </div>
                   <input 
                     type="range" 
                     min="2001" max="2024" 
                     value={currentYear}
                     onChange={(e) => setCurrentYear(parseInt(e.target.value))}
-                    className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-green-500"
+                    className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-amber-400"
                   />
-                  <div className="flex justify-between text-xs text-slate-500 mt-2 font-mono">
+                  <div className="flex justify-between text-xs text-slate-400 mt-2 font-mono font-bold">
                     <span>2001</span>
                     <span>2024</span>
                   </div>
                 </div>
                 
-                {/* Filters */}
-                <div>
-                  <h3 className="text-sm font-bold text-slate-200 mb-4 uppercase tracking-wider">{t.filterTitle}</h3>
-                  <div className="space-y-5">
+                {/* Environmental Filters Card */}
+                <div className="bg-slate-900/80 p-4 rounded-2xl border border-slate-700/60 shadow-lg">
+                  <h3 className="text-xs font-extrabold text-slate-200 mb-4 uppercase tracking-wider border-b border-slate-700/60 pb-2">{t.filterTitle}</h3>
+                  <div className="space-y-4">
                     <div>
-                      <label className="flex justify-between text-xs mb-2 text-slate-400">
+                      <label className="flex justify-between text-xs mb-1.5 text-slate-300 font-medium">
                         <span>{t.elevation}</span>
-                        <span className="font-mono text-emerald-400">{elevationMax}m</span>
+                        <span className="font-mono font-bold text-emerald-400 bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-500/30">{elevationMax}m</span>
                       </label>
                       <input 
                         type="range" min="0" max="3000" step="50"
                         value={elevationMax}
                         onChange={(e) => setElevationMax(Number(e.target.value))}
-                        className="w-full accent-emerald-500"
+                        className="w-full accent-emerald-400 h-1.5 bg-slate-700 rounded-lg"
                       />
                     </div>
                     <div>
-                      <label className="flex justify-between text-xs mb-2 text-slate-400">
+                      <label className="flex justify-between text-xs mb-1.5 text-slate-300 font-medium">
                         <span>{t.slope}</span>
-                        <span className="font-mono text-emerald-400">{slopeMax}°</span>
+                        <span className="font-mono font-bold text-emerald-400 bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-500/30">{slopeMax}°</span>
                       </label>
                       <input 
                         type="range" min="0" max="90" step="1"
                         value={slopeMax}
                         onChange={(e) => setSlopeMax(Number(e.target.value))}
-                        className="w-full accent-emerald-500"
+                        className="w-full accent-emerald-400 h-1.5 bg-slate-700 rounded-lg"
                       />
                     </div>
                     <div>
-                      <label className="flex justify-between text-xs mb-2 text-slate-400">
+                      <label className="flex justify-between text-xs mb-1.5 text-slate-300 font-medium">
                         <span>{t.treeCover}</span>
-                        <span className="font-mono text-emerald-400">{treeCoverMin}%</span>
+                        <span className="font-mono font-bold text-emerald-400 bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-500/30">{treeCoverMin}%</span>
                       </label>
                       <input 
                         type="range" min="0" max="100" step="5"
                         value={treeCoverMin}
                         onChange={(e) => setTreeCoverMin(Number(e.target.value))}
-                        className="w-full accent-emerald-500"
+                        className="w-full accent-emerald-400 h-1.5 bg-slate-700 rounded-lg"
                       />
                     </div>
                     <div>
-                      <label className="flex justify-between text-xs mb-2 text-slate-400">
+                      <label className="flex justify-between text-xs mb-1.5 text-slate-300 font-medium">
                         <span>{t.rainfall}</span>
-                        <span className="font-mono text-blue-400">{rainfallMax}mm</span>
+                        <span className="font-mono font-bold text-blue-400 bg-blue-950/60 px-2 py-0.5 rounded border border-blue-500/30">{rainfallMax}mm</span>
                       </label>
                       <input 
                         type="range" min="0" max="5000" step="100"
                         value={rainfallMax}
                         onChange={(e) => setRainfallMax(Number(e.target.value))}
-                        className="w-full accent-blue-500"
+                        className="w-full accent-blue-400 h-1.5 bg-slate-700 rounded-lg"
                       />
                     </div>
                   </div>
                 </div>
                 
-                {/* Field Report Form */}
-                <div className="bg-slate-900/50 p-4 rounded-xl border border-slate-700/50">
-                  <h3 className="text-sm font-bold text-slate-200 mb-3 uppercase tracking-wider">{t.reportTitle}</h3>
+                {/* Community Field Report Form (Runglang inspired Step Wizard Card) */}
+                <div className="bg-slate-900/90 p-5 rounded-2xl border border-slate-700/80 shadow-2xl space-y-4">
+                  <div className="flex items-center justify-between border-b border-slate-700/60 pb-2.5">
+                    <h3 className="text-xs font-black text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+                      <Camera size={16} />
+                      <span>{t.reportTitle}</span>
+                    </h3>
+                    <span className="text-[10px] bg-green-500/20 text-green-400 border border-green-500/40 px-2 py-0.5 rounded-full font-bold">
+                      {language === 'vi' ? 'Cộng đồng' : 'Community'}
+                    </span>
+                  </div>
                   
-                  {!user ? (
-                    <div className="flex flex-col items-center justify-center py-6 border border-dashed border-slate-600 rounded-lg bg-slate-800/50">
-                      <Lock size={32} className="text-slate-500 mb-3" />
-                      <p className="text-sm text-slate-400 text-center mb-4 px-4">{t.needLoginToReport}</p>
-                      <button 
-                        onClick={() => setShowAuthModal(true)}
-                        className="px-4 py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg text-sm font-semibold transition-colors"
-                      >
-                        {t.login}
-                      </button>
-                    </div>
-                  ) : (
-                    <>
+                  <>
                       {!selectedLocation ? (
-                        <div className="p-4 border border-dashed border-slate-600 rounded-lg text-center flex flex-col items-center gap-3 bg-slate-800 mb-4">
-                          <span className="text-xs text-slate-400">{t.clickToReport}</span>
+                        <div className="p-4 border-2 border-dashed border-slate-700 rounded-xl text-center flex flex-col items-center gap-3 bg-slate-800/40">
+                          <span className="text-xs text-slate-300 leading-relaxed font-medium">{t.clickToReport}</span>
                           <button 
                             onClick={handleGetLocation}
                             disabled={isGettingLocation}
-                            className={`w-full py-2 rounded-lg text-sm font-bold transition-all shadow-lg ${
+                            className={`w-full py-2.5 rounded-xl text-xs font-black tracking-wide transition-all shadow-lg flex items-center justify-center gap-2 ${
                               isGettingLocation
-                                ? 'bg-slate-700 text-slate-500 cursor-not-allowed'
-                                : 'bg-blue-600 text-white hover:bg-blue-500 hover:-translate-y-0.5'
+                                ? 'bg-slate-700 text-slate-400 cursor-not-allowed'
+                                : 'bg-blue-600 hover:bg-blue-500 text-white hover:scale-[1.02]'
                             }`}
                           >
                             {isGettingLocation ? t.gettingLocation : t.getLocation}
                           </button>
                         </div>
                       ) : (
-                        <div className="mb-4 text-xs bg-green-900/30 border border-green-800/50 p-2 rounded flex justify-between items-center">
-                          <span className="text-green-400">
-                            {t.selectedLabel} {selectedLocation.lat.toFixed(4)}, {selectedLocation.lon.toFixed(4)}
+                        <div className="text-xs bg-green-950/80 border border-green-600/60 p-3 rounded-xl flex justify-between items-center shadow-inner">
+                          <span className="text-green-300 font-mono font-bold">
+                            📍 {selectedLocation.lat.toFixed(4)}, {selectedLocation.lon.toFixed(4)}
                           </span>
                           <button 
                             onClick={() => setSelectedLocation(null)}
-                            className="text-slate-400 hover:text-red-400 underline font-medium ml-2"
+                            className="text-slate-400 hover:text-red-400 underline text-xs font-semibold ml-2"
                           >
                             {t.cancel}
                           </button>
@@ -610,9 +516,9 @@ export default function Home() {
 
                       <div className="space-y-4">
                         <div>
-                          <label className="text-xs text-slate-400 font-medium">{t.commentLabel}</label>
+                          <label className="text-xs text-slate-300 font-bold mb-1.5 block">{t.commentLabel}</label>
                           <textarea 
-                            className="w-full mt-1 p-3 bg-slate-800 rounded-lg border border-slate-600 text-sm focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none resize-none h-24 transition-all"
+                            className="w-full p-3 bg-slate-800/80 rounded-xl border border-slate-700 text-xs text-slate-100 placeholder-slate-500 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none resize-none h-24 transition-all"
                             placeholder={t.commentPlaceholder}
                             value={comment}
                             onChange={(e) => setComment(e.target.value)}
@@ -621,8 +527,8 @@ export default function Home() {
                         </div>
                         
                         <div>
-                          <label className="text-xs text-slate-400 font-medium mb-1 block">{t.imageLabel}</label>
-                          <div className="relative w-full h-32 mt-1 rounded-xl border-2 border-dashed border-slate-600 bg-slate-800/50 flex items-center justify-center overflow-hidden transition-colors hover:bg-slate-700/50 group">
+                          <label className="text-xs text-slate-300 font-bold mb-1.5 block">{t.imageLabel}</label>
+                          <div className="relative w-full h-32 rounded-xl border-2 border-dashed border-slate-700 bg-slate-800/60 flex items-center justify-center overflow-hidden transition-colors hover:bg-slate-700/60 group">
                             
                             {/* Hidden File Input */}
                             <input 
@@ -694,7 +600,6 @@ export default function Home() {
                         </button>
                       </div>
                     </>
-                  )}
                 </div>
               </div>
             </div>

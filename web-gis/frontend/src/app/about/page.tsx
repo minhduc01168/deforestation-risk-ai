@@ -126,7 +126,7 @@ export default function AboutPage() {
               <div className="w-full md:w-1/2">
                 <div className="rounded-2xl overflow-hidden shadow-xl aspect-video relative bg-gray-200">
                   <img 
-                    src="/images/gialai_2026/thuc_dia_2.JPG" 
+                    src="/images/gialai_2026/thuc_dia_6.JPG" 
                     alt={t('about.trip_3_title')}
                     className="w-full h-full object-cover"
                   />

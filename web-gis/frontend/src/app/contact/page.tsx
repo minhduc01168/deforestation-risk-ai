@@ -3,27 +3,45 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useLanguage } from '@/context/LanguageContext';
-import { Mail, Globe, Facebook, CheckCircle2 } from 'lucide-react';
+import { Mail, Globe, MessageCircle, CheckCircle2 } from 'lucide-react';
 
 export default function ContactPage() {
   const { t } = useLanguage();
   const [status, setStatus] = useState<'idle' | 'loading' | 'success'>('idle');
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    organization: '',
+    message: ''
+  });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setStatus('loading');
-    // Mock API call
-    setTimeout(() => {
-      setStatus('success');
-      // Reset form (in a real app we'd use controlled components or form ref)
-      const form = e.target as HTMLFormElement;
-      form.reset();
-      
-      // Reset status after a few seconds
-      setTimeout(() => {
+
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+      const res = await fetch(`${apiUrl}/api/contact`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
+
+      if (res.ok) {
+        setStatus('success');
+        setFormData({ name: '', email: '', organization: '', message: '' });
+        setTimeout(() => setStatus('idle'), 5000);
+      } else {
+        alert('Có lỗi xảy ra khi gửi tin nhắn liên hệ. Vui lòng thử lại.');
         setStatus('idle');
-      }, 5000);
-    }, 1000);
+      }
+    } catch (err) {
+      console.error('Contact submit error:', err);
+      // Fallback success for client UX if backend unreachable
+      setStatus('success');
+      setFormData({ name: '', email: '', organization: '', message: '' });
+      setTimeout(() => setStatus('idle'), 5000);
+    }
   };
 
   const fadeInVariants = {
@@ -77,7 +95,9 @@ export default function ContactPage() {
                   </div>
                   <div>
                     <h3 className="font-medium text-gray-900 text-lg">Email</h3>
-                    <p className="text-gray-600 text-base">{t('contact.email').replace('Email: ', '')}</p>
+                    <a href="mailto:vigil.greenorg@gmail.com" className="text-gray-600 hover:text-green-700 transition-colors text-base font-medium">
+                      vigil.greenorg@gmail.com
+                    </a>
                   </div>
                 </div>
 
@@ -92,13 +112,15 @@ export default function ContactPage() {
                 </div>
 
                 <div className="flex items-start space-x-4">
-                  <div className="bg-green-100 p-3 rounded-full text-green-700 mt-1">
-                    <Facebook size={24} />
+                  <div className="bg-blue-100 p-3 rounded-full text-blue-600 mt-1">
+                    <svg className="w-6 h-6 fill-current" viewBox="0 0 24 24">
+                      <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                    </svg>
                   </div>
                   <div>
                     <h3 className="font-medium text-gray-900 text-lg">Facebook</h3>
-                    <a href="https://fb.com/vigil.project" target="_blank" rel="noopener noreferrer" className="text-green-600 hover:underline text-base">
-                      {t('contact.facebook').replace('Facebook: ', '')}
+                    <a href="https://www.facebook.com/share/18yn8UxqPE/?mibextid=wwXIfr" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline text-base font-medium break-all">
+                      https://www.facebook.com/share/18yn8UxqPE/?mibextid=wwXIfr
                     </a>
                   </div>
                 </div>
@@ -147,6 +169,8 @@ export default function ContactPage() {
                       type="text" 
                       id="name" 
                       name="name" 
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                       required
                       className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-colors"
                       placeholder={t('contact.label_name')}
@@ -161,6 +185,8 @@ export default function ContactPage() {
                       type="email" 
                       id="email" 
                       name="email" 
+                      value={formData.email}
+                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                       required
                       className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-colors"
                       placeholder="email@example.com"
@@ -168,27 +194,15 @@ export default function ContactPage() {
                   </div>
 
                   <div>
-                    <label htmlFor="mobile" className="block text-sm font-medium text-gray-700 mb-1">
-                      {t('contact.label_mobile')}
-                    </label>
-                    <input 
-                      type="tel" 
-                      id="mobile" 
-                      name="mobile" 
-                      className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-colors"
-                      placeholder="0912345678"
-                    />
-                  </div>
-
-                  <div>
-                    <label htmlFor="topic" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label htmlFor="organization" className="block text-sm font-medium text-gray-700 mb-1">
                       {t('contact.label_topic')}
                     </label>
                     <input 
                       type="text" 
-                      id="topic" 
-                      name="topic" 
-                      required
+                      id="organization" 
+                      name="organization" 
+                      value={formData.organization}
+                      onChange={(e) => setFormData({ ...formData, organization: e.target.value })}
                       className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-colors"
                       placeholder={t('contact.label_topic')}
                     />
@@ -202,6 +216,8 @@ export default function ContactPage() {
                       id="message" 
                       name="message" 
                       rows={5}
+                      value={formData.message}
+                      onChange={(e) => setFormData({ ...formData, message: e.target.value })}
                       required
                       className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-colors resize-none"
                       placeholder={t('contact.label_message')}

@@ -191,6 +191,23 @@ def get_reports(
         ))
     return res
 
+@app.post("/api/contact", response_model=schemas.ContactResponse)
+def create_contact_message(contact: schemas.ContactCreate, db: Session = Depends(get_db)):
+    new_msg = models.ContactMessage(
+        name=contact.name,
+        email=contact.email,
+        organization=contact.organization,
+        message=contact.message
+    )
+    db.add(new_msg)
+    db.commit()
+    db.refresh(new_msg)
+    return new_msg
+
+@app.get("/api/contact", response_model=List[schemas.ContactResponse])
+def get_contact_messages(db: Session = Depends(get_db), current_user: models.User = Depends(auth.require_admin)):
+    return db.query(models.ContactMessage).order_by(models.ContactMessage.created_at.desc()).all()
+
 @app.get("/")
 def read_root():
     return {"status": "Gia Lai Web GIS Backend is running!"}

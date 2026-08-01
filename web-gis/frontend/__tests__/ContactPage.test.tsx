@@ -53,9 +53,9 @@ describe('ContactPage', () => {
     expect(screen.getByText(/Contact VIGIL|Liên hệ với VIGIL/)).toBeInTheDocument();
     
     // Check contact info
-    expect(screen.getByText('contact@vigil.vn')).toBeInTheDocument();
+    expect(screen.getByText('vigil.greenorg@gmail.com')).toBeInTheDocument();
     expect(screen.getByText('www.vigil.vn')).toBeInTheDocument();
-    expect(screen.getByText('fb.com/vigil.project')).toBeInTheDocument();
+    expect(screen.getByText('https://www.facebook.com/share/18yn8UxqPE/?mibextid=wwXIfr')).toBeInTheDocument();
   });
 
   it('submits form and displays success message', async () => {

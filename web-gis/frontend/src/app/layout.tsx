@@ -16,10 +16,14 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "VIGIL | Deforestation Web GIS",
-  description: "Hệ thống Cảnh báo & Giám sát Mất rừng Gia Lai",
+  title: "VIGIL - Giám Sát & Cảnh Báo Mất Rừng Gia Lai | AI Deforestation Monitoring & Early Warning Platform",
+  description: "Hệ thống AI & Viễn thám Giám sát & Cảnh báo Nguy cơ Mất rừng Tỉnh Gia Lai",
   icons: {
-    icon: '/images/logo.png',
+    icon: [
+      { url: '/images/logo.png' },
+    ],
+    shortcut: '/images/logo.png',
+    apple: '/images/logo.png',
   },
 };
 

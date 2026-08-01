@@ -25,7 +25,7 @@ export default function InteractiveMap({ geojsonUrl = '/data/mock-risks.geojson'
       ],
       'fill-opacity': 0.5
     }
-  }), []);
+  } as any), []);
 
   // Style for the polygon outline
   const lineLayerStyle = useMemo(() => ({
@@ -42,7 +42,7 @@ export default function InteractiveMap({ geojsonUrl = '/data/mock-risks.geojson'
       ],
       'line-width': 2
     }
-  }), []);
+  } as any), []);
 
   return (
     <div className="w-full h-full relative rounded-2xl overflow-hidden shadow-lg border border-gray-200">

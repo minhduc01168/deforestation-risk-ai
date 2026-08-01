@@ -162,7 +162,7 @@ export default function InteractiveMap({
   const baseMapStyle = useMemo(() => {
     if (isSatellite || activeLayer === 'sentinel') {
       return {
-        version: 8,
+        version: 8 as const,
         sources: {
           'esri-satellite': {
             type: 'raster',
@@ -181,7 +181,7 @@ export default function InteractiveMap({
             maxzoom: 22
           }
         ]
-      };
+      } as any;
     }
     
     // For OSM, Hansen, SRTM, CHIRPS, we use carto light or dark as base
@@ -194,14 +194,14 @@ export default function InteractiveMap({
   }, [isSatellite, activeLayer]);
     
   const filterExpression = useMemo(() => {
-    // Show all points, but if year < 2024, filter to only show points with loss_first_year <= currentYear
+    // Single-year view: Filter to ONLY show points with loss_first_year == currentYear
     // Points with loss_first_year = 0 are non-deforested (control) points — always shown
     const expr: any[] = [
       "all",
-      // Show: (no deforestation recorded) OR (deforestation happened before or at currentYear)
+      // Show: (no deforestation recorded) OR (deforestation happened EXACTLY in currentYear)
       ["any",
         ["==", ["get", "loss_first_year"], 0],
-        ["<=", ["get", "loss_first_year"], currentYear]
+        ["==", ["get", "loss_first_year"], currentYear]
       ]
     ];
     
@@ -269,9 +269,19 @@ export default function InteractiveMap({
                   10, 3,
                   14, 15
                 ],
-                'circle-color': 'rgba(255, 0, 0, 0.2)',
+                'circle-color': [
+                  'case',
+                  ['>=', ['coalesce', ['get', 'risk_rf'], 0], 0.7], 'rgba(239, 68, 68, 0.4)',
+                  ['>=', ['coalesce', ['get', 'risk_rf'], 0], 0.4], 'rgba(249, 115, 22, 0.4)',
+                  'rgba(234, 179, 8, 0.4)'
+                ],
                 'circle-stroke-width': 2,
-                'circle-stroke-color': '#ff0055'
+                'circle-stroke-color': [
+                  'case',
+                  ['>=', ['coalesce', ['get', 'risk_rf'], 0], 0.7], '#ef4444',
+                  ['>=', ['coalesce', ['get', 'risk_rf'], 0], 0.4], '#f97316',
+                  '#eab308'
+                ]
               }}
             />
             <Layer
@@ -373,28 +383,34 @@ export default function InteractiveMap({
             latitude={selectedLocation.lat}
             onClose={() => onLocationSelect(null)}
             closeOnClick={false}
-            className="text-black z-50"
+            className="z-50"
           >
-            <div className="p-3 w-64 font-sans">
-              <h3 className="font-bold text-sm mb-2 text-green-700">{t.newReportTitle}</h3>
-              <p className="text-xs text-slate-500 mb-3">{t.coordsLabel} {selectedLocation.lat.toFixed(4)}, {selectedLocation.lon.toFixed(4)}</p>
+            <div className="w-full box-border font-sans text-slate-100">
+              <h3 className="font-extrabold text-sm mb-1 text-emerald-400 tracking-wide flex items-center gap-1.5">
+                <MapPin size={16} />
+                <span>{t.newReportTitle}</span>
+              </h3>
+              <p className="text-[11px] text-slate-400 mb-3 font-mono">
+                {t.coordsLabel} {selectedLocation.lat.toFixed(4)}, {selectedLocation.lon.toFixed(4)}
+              </p>
               
-              <form onSubmit={handleReportSubmit} className="space-y-3 text-sm">
+              <form onSubmit={handleReportSubmit} className="space-y-3 text-xs">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">{t.commentLabel}</label>
+                  <label className="block text-[11px] font-bold text-slate-300 mb-1">{t.commentLabel}</label>
                   <textarea 
-                    className="w-full border border-slate-300 rounded p-2 text-xs focus:outline-none focus:border-green-500" 
+                    className="w-full box-border bg-slate-800/90 border border-slate-700 rounded-xl p-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-colors resize-none" 
                     rows={3} 
                     required 
                     value={reportComment}
                     onChange={e => setReportComment(e.target.value)}
+                    placeholder="Mô tả hiện trạng thực địa..."
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">{t.imageLabel}</label>
+                  <label className="block text-[11px] font-bold text-slate-300 mb-1">{t.imageLabel}</label>
                   <input 
                     type="url" 
-                    className="w-full border border-slate-300 rounded p-2 text-xs focus:outline-none focus:border-green-500" 
+                    className="w-full box-border bg-slate-800/90 border border-slate-700 rounded-xl p-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-colors" 
                     placeholder="https://..."
                     value={reportImageUrl}
                     onChange={e => setReportImageUrl(e.target.value)}
@@ -402,7 +418,7 @@ export default function InteractiveMap({
                 </div>
                 <button 
                   type="submit" 
-                  className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded text-xs transition-colors"
+                  className="w-full box-border bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 px-4 rounded-xl text-xs transition-all shadow-lg hover:scale-[1.02] cursor-pointer"
                 >
                   {t.submitBtn}
                 </button>
@@ -423,7 +439,7 @@ export default function InteractiveMap({
               setPopupInfo(report);
             }}
           >
-            <div className="text-blue-500 cursor-pointer drop-shadow-md hover:text-blue-400 transition-colors">
+            <div className="text-emerald-400 cursor-pointer drop-shadow-lg hover:scale-125 transition-transform">
               <MapPin size={28} />
             </div>
           </Marker>
@@ -436,22 +452,27 @@ export default function InteractiveMap({
             longitude={popupInfo.lon}
             latitude={popupInfo.lat}
             onClose={() => setPopupInfo(null)}
-            className="text-black"
+            className="z-50"
           >
-            <div className="p-3 max-w-xs font-sans">
-              <p className="font-bold text-sm mb-2 text-slate-800">{t.reportTitle}</p>
-              <p className="text-sm mb-3 text-slate-600 bg-slate-50 p-2 rounded">{popupInfo.comment}</p>
+            <div className="w-full box-border font-sans text-slate-100">
+              <p className="font-extrabold text-sm mb-2 text-amber-400 flex items-center gap-1.5">
+                <MapPin size={16} />
+                <span>{t.reportTitle}</span>
+              </p>
+              <p className="text-xs mb-3 text-slate-200 bg-slate-800/80 p-2.5 rounded-xl border border-slate-700/60 leading-relaxed">
+                {popupInfo.comment}
+              </p>
               {popupInfo.image_url && (
                 <img 
                   src={popupInfo.image_url.startsWith('http') ? popupInfo.image_url : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}${popupInfo.image_url}`} 
                   alt="Field" 
-                  className="w-full h-auto rounded shadow-sm mb-2" 
+                  className="w-full h-36 object-cover rounded-xl border border-slate-700 shadow-md mb-2" 
                 />
               )}
               {/* Random animal avatar for anonymous */}
-              <div className="flex items-center gap-2 mt-2 pt-2 border-t border-slate-100">
-                <img src={`https://ui-avatars.com/api/?name=Anon+User&background=random`} alt="Avatar" className="w-6 h-6 rounded-full" />
-                <p className="text-[11px] text-slate-400 font-medium">
+              <div className="flex items-center gap-2 mt-2 pt-2 border-t border-slate-800">
+                <img src={`https://ui-avatars.com/api/?name=Anon+User&background=random`} alt="Avatar" className="w-6 h-6 rounded-full border border-slate-700" />
+                <p className="text-[10px] text-slate-400 font-medium font-mono">
                   {t.dateLabel} {new Date(popupInfo.created_at).toLocaleString(language === 'vi' ? 'vi-VN' : 'en-US')}
                 </p>
               </div>
