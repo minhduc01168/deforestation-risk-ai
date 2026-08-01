@@ -15,7 +15,7 @@ const fallbackTranslations = {
     satelliteTitle: "Ảnh viễn thám:",
     satelliteDesc: "Dữ liệu chỉ số thực vật (NDVI) và độ ẩm (chờ cập nhật).",
     envTitle: "Địa hình & Khí hậu:",
-    envDesc: "Độ cao (Elevation) và Lượng mưa (Rainfall) trung bình năm.",
+    envDesc: "Độ cao địa hình và Lượng mưa trung bình năm.",
     guide: "Hướng dẫn sử dụng",
     step1: "Kéo Thanh Thời Gian để xem diễn biến mất rừng qua các năm.",
     step2: "Điều chỉnh Bộ Lọc Môi Trường để khoanh vùng nguy cơ theo độ cao và lượng mưa.",

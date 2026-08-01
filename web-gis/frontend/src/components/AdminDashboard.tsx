@@ -13,6 +13,15 @@ interface Report {
   created_at: string;
 }
 
+interface ContactMessageItem {
+  id: number;
+  name: string;
+  email: string;
+  organization: string | null;
+  message: string;
+  created_at: string;
+}
+
 export default function AdminDashboard({ 
   onViewOnMap, 
   language = 'vi' 
@@ -21,16 +30,21 @@ export default function AdminDashboard({
   language?: 'vi' | 'en'
 }) {
   const { user, token } = useAuth();
+  const [activeTab, setActiveTab] = useState<'reports' | 'contacts'>('reports');
   const [reports, setReports] = useState<Report[]>([]);
+  const [contacts, setContacts] = useState<ContactMessageItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedReport, setSelectedReport] = useState<Report | null>(null);
 
   const t = {
     vi: {
-      title: "Dashboard Quản Trị Báo Cáo",
+      title: "Dashboard Quản Trị Hệ Thống",
+      reportsTab: "Báo Cáo Thực Địa",
+      contactsTab: "Ý Kiến & Liên Hệ",
       noAccess: "Bạn không có quyền truy cập trang này.",
       loading: "Đang tải dữ liệu...",
       noReports: "Chưa có báo cáo nào được gửi.",
+      noContacts: "Chưa có ý kiến / liên hệ nào được gửi.",
       comment: "Nội dung",
       time: "Thời gian",
       location: "Tọa độ",
@@ -42,10 +56,13 @@ export default function AdminDashboard({
       reportDetails: "Chi Tiết Báo Cáo",
     },
     en: {
-      title: "Reports Administration Dashboard",
+      title: "System Administration Dashboard",
+      reportsTab: "Field Reports",
+      contactsTab: "Contact Messages",
       noAccess: "You do not have access to this page.",
       loading: "Loading data...",
-      noReports: "No reports have been submitted yet.",
+      noReports: "No reports submitted yet.",
+      noContacts: "No contact messages submitted yet.",
       comment: "Comment",
       time: "Time",
       location: "Location",
@@ -59,7 +76,7 @@ export default function AdminDashboard({
   }[language];
 
   useEffect(() => {
-    const fetchReports = async () => {
+    const fetchData = async () => {
       if (!token || user?.role !== 'admin') {
         setIsLoading(false);
         return;
@@ -67,24 +84,32 @@ export default function AdminDashboard({
       
       try {
         const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-        const res = await fetch(`${apiUrl}/api/reports`, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
+        
+        // Fetch field reports
+        const resReports = await fetch(`${apiUrl}/api/reports`, {
+          headers: { 'Authorization': `Bearer ${token}` }
         });
-        if (res.ok) {
-          const data = await res.json();
-          // Sort newest first
+        if (resReports.ok) {
+          const data = await resReports.json();
           setReports(data.sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()));
         }
+
+        // Fetch contact messages
+        const resContacts = await fetch(`${apiUrl}/api/contact`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (resContacts.ok) {
+          const cData = await resContacts.json();
+          setContacts(cData.sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()));
+        }
       } catch (err) {
-        console.error("Failed to fetch reports", err);
+        console.error("Failed to fetch admin data", err);
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchReports();
+    fetchData();
   }, [token, user]);
 
   if (user?.role !== 'admin') {
@@ -111,77 +136,141 @@ export default function AdminDashboard({
 
   return (
     <div className="w-full max-w-5xl mx-auto space-y-6 pb-20">
-      <div className="flex items-center justify-between border-b border-slate-700 pb-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-slate-700 pb-4 gap-4">
         <h2 className="text-2xl font-bold text-white">{t.title}</h2>
-        <div className="bg-blue-900/50 text-blue-400 px-3 py-1 rounded-full text-sm font-semibold border border-blue-800">
-          {reports.length} Báo cáo
+        
+        {/* Navigation Tabs */}
+        <div className="flex items-center gap-2 bg-slate-900 p-1.5 rounded-xl border border-slate-700">
+          <button
+            onClick={() => setActiveTab('reports')}
+            className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${
+              activeTab === 'reports'
+                ? 'bg-emerald-600 text-white shadow-lg'
+                : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            {t.reportsTab} ({reports.length})
+          </button>
+          <button
+            onClick={() => setActiveTab('contacts')}
+            className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${
+              activeTab === 'contacts'
+                ? 'bg-emerald-600 text-white shadow-lg'
+                : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            {t.contactsTab} ({contacts.length})
+          </button>
         </div>
       </div>
 
-      {reports.length === 0 ? (
-        <div className="text-center py-12 text-slate-400 border border-dashed border-slate-700 rounded-xl bg-slate-800/30">
-          {t.noReports}
-        </div>
-      ) : (
-        <div className="flex flex-col space-y-4">
-          {reports.map(report => (
-            <div 
-              key={report.id} 
-              className="bg-slate-800 border border-slate-700 rounded-xl p-4 flex flex-col md:flex-row items-start md:items-center gap-5 hover:border-slate-500 hover:bg-slate-750 transition-all shadow-lg"
-            >
-              {/* Thumbnail */}
-              {report.image_url ? (
-                <div className="w-full md:w-32 h-32 md:h-24 flex-shrink-0 overflow-hidden rounded-lg bg-slate-900 border border-slate-600">
-                  <img 
-                    src={(process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000') + report.image_url} 
-                    alt="Evidence Thumbnail" 
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              ) : (
-                <div className="w-full md:w-32 h-32 md:h-24 flex-shrink-0 flex flex-col items-center justify-center rounded-lg bg-slate-900 border border-slate-600 text-slate-600">
-                  <ImageIcon size={32} className="mb-1 opacity-50" />
-                  <span className="text-[10px] uppercase tracking-wider font-semibold">No Image</span>
-                </div>
-              )}
-              
-              {/* Report Info */}
-              <div className="flex-1 min-w-0 flex flex-col justify-center space-y-2">
-                <div className="flex items-start gap-2">
-                  <MessageSquare size={16} className="text-slate-400 mt-0.5 flex-shrink-0" />
-                  <p className="text-sm text-slate-200 line-clamp-2 leading-relaxed">
-                    {report.comment || <span className="text-slate-500 italic">{t.noComment}</span>}
-                  </p>
-                </div>
+      {activeTab === 'reports' ? (
+        reports.length === 0 ? (
+          <div className="text-center py-12 text-slate-400 border border-dashed border-slate-700 rounded-xl bg-slate-800/30">
+            {t.noReports}
+          </div>
+        ) : (
+          <div className="flex flex-col space-y-4">
+            {reports.map(report => (
+              <div 
+                key={report.id} 
+                className="bg-slate-800 border border-slate-700 rounded-xl p-4 flex flex-col md:flex-row items-start md:items-center gap-5 hover:border-slate-500 hover:bg-slate-750 transition-all shadow-lg"
+              >
+                {/* Thumbnail */}
+                {report.image_url ? (
+                  <div className="w-full md:w-32 h-32 md:h-24 flex-shrink-0 overflow-hidden rounded-lg bg-slate-900 border border-slate-600">
+                    <img 
+                      src={(process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000') + report.image_url} 
+                      alt="Evidence Thumbnail" 
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                ) : (
+                  <div className="w-full md:w-32 h-32 md:h-24 flex-shrink-0 flex flex-col items-center justify-center rounded-lg bg-slate-900 border border-slate-600 text-slate-600">
+                    <ImageIcon size={32} className="mb-1 opacity-50" />
+                    <span className="text-[10px] uppercase tracking-wider font-semibold">No Image</span>
+                  </div>
+                )}
                 
-                <div className="flex flex-wrap items-center gap-4 pt-2">
-                  <div className="flex items-center gap-1.5 text-xs text-slate-400 bg-slate-900/50 px-2 py-1 rounded">
-                    <Clock size={14} className="text-blue-400" />
-                    {new Date(report.created_at).toLocaleString(language === 'vi' ? 'vi-VN' : 'en-US')}
+                {/* Report Info */}
+                <div className="flex-1 min-w-0 flex flex-col justify-center space-y-2">
+                  <div className="flex items-start gap-2">
+                    <MessageSquare size={16} className="text-slate-400 mt-0.5 flex-shrink-0" />
+                    <p className="text-sm text-slate-200 line-clamp-2 leading-relaxed">
+                      {report.comment || <span className="text-slate-500 italic">{t.noComment}</span>}
+                    </p>
                   </div>
-                  <div className="flex items-center gap-1.5 text-xs text-slate-400 bg-slate-900/50 px-2 py-1 rounded">
-                    <MapPin size={14} className="text-green-400" />
-                    <span className="font-mono">{report.lat.toFixed(5)}, {report.lon.toFixed(5)}</span>
+                  
+                  <div className="flex flex-wrap items-center gap-4 pt-2">
+                    <div className="flex items-center gap-1.5 text-xs text-slate-400 bg-slate-900/50 px-2 py-1 rounded">
+                      <Clock size={14} className="text-blue-400" />
+                      {new Date(report.created_at).toLocaleString(language === 'vi' ? 'vi-VN' : 'en-US')}
+                    </div>
+                    <div className="flex items-center gap-1.5 text-xs text-slate-400 bg-slate-900/50 px-2 py-1 rounded">
+                      <MapPin size={14} className="text-green-400" />
+                      <span className="font-mono">{report.lat.toFixed(5)}, {report.lon.toFixed(5)}</span>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Action Button */}
-              <div className="w-full md:w-auto pt-2 md:pt-0 border-t md:border-t-0 border-slate-700 flex justify-end">
-                <button 
-                  onClick={() => setSelectedReport(report)}
-                  className="flex items-center justify-center gap-2 py-2 px-4 bg-blue-600/20 hover:bg-blue-600 text-blue-400 hover:text-white border border-blue-500/50 rounded-lg text-sm font-semibold transition-all shadow-lg w-full md:w-auto"
-                >
-                  <Search size={16} />
-                  {t.details}
-                </button>
+                {/* Action Button */}
+                <div className="w-full md:w-auto pt-2 md:pt-0 border-t md:border-t-0 border-slate-700 flex justify-end">
+                  <button 
+                    onClick={() => setSelectedReport(report)}
+                    className="flex items-center justify-center gap-2 py-2 px-4 bg-blue-600/20 hover:bg-blue-600 text-blue-400 hover:text-white border border-blue-500/50 rounded-lg text-sm font-semibold transition-all shadow-lg w-full md:w-auto"
+                  >
+                    <Search size={16} />
+                    {t.details}
+                  </button>
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )
+      ) : (
+        /* Contact Messages Tab */
+        contacts.length === 0 ? (
+          <div className="text-center py-12 text-slate-400 border border-dashed border-slate-700 rounded-xl bg-slate-800/30">
+            {t.noContacts}
+          </div>
+        ) : (
+          <div className="flex flex-col space-y-4">
+            {contacts.map(c => (
+              <div 
+                key={c.id}
+                className="bg-slate-800 border border-slate-700 rounded-2xl p-6 shadow-xl space-y-4 hover:border-emerald-500/50 transition-all"
+              >
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-700 pb-3 gap-2">
+                  <div>
+                    <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
+                      <span>{c.name}</span>
+                    </h3>
+                    <div className="text-xs text-emerald-400 font-mono mt-0.5">{c.email}</div>
+                  </div>
+
+                  <div className="flex items-center gap-3 text-xs text-slate-400 bg-slate-900/60 px-3 py-1.5 rounded-xl border border-slate-700/60">
+                    <Clock size={14} className="text-amber-400" />
+                    <span>{new Date(c.created_at).toLocaleString(language === 'vi' ? 'vi-VN' : 'en-US')}</span>
+                  </div>
+                </div>
+
+                {c.organization && (
+                  <div className="text-xs text-slate-300 bg-slate-900/40 px-3 py-1.5 rounded-lg border border-slate-800 inline-block font-semibold">
+                    📌 {c.organization}
+                  </div>
+                )}
+
+                <div className="bg-slate-900/70 p-4 rounded-xl border border-slate-700/60 text-slate-200 text-sm leading-relaxed whitespace-pre-wrap">
+                  {c.message}
+                </div>
+              </div>
+            ))}
+          </div>
+        )
       )}
 
-      {/* Detail Modal Overlay */}
+      {/* Detail Modal Overlay for Reports */}
       {selectedReport && (
         <div className="fixed inset-0 z-[100] bg-slate-900/90 backdrop-blur-sm flex justify-center items-center p-4 md:p-6 overflow-y-auto">
           <div className="bg-slate-800 border border-slate-600 w-full max-w-3xl rounded-2xl shadow-2xl flex flex-col relative my-auto">

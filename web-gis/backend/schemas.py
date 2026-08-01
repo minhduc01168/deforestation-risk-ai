@@ -41,3 +41,20 @@ class Token(BaseModel):
     access_token: str
     token_type: str
     user: UserResponse
+
+class ContactCreate(BaseModel):
+    name: str
+    email: str
+    organization: Optional[str] = None
+    message: str
+
+class ContactResponse(BaseModel):
+    id: int
+    name: str
+    email: str
+    organization: Optional[str]
+    message: str
+    created_at: datetime
+
+    class Config:
+        from_attributes = True

@@ -58,3 +58,16 @@ def require_admin(current_user: models.User = Depends(get_current_user)):
             detail="The user doesn't have enough privileges"
         )
     return current_user
+
+async def get_optional_user(token: Optional[str] = Depends(OAuth2PasswordBearer(tokenUrl="/api/auth/login", auto_error=False)), db: Session = Depends(get_db)):
+    if not token:
+        return None
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        username: str = payload.get("sub")
+        if not username:
+            return None
+        user = db.query(models.User).filter(models.User.username == username).first()
+        return user
+    except JWTError:
+        return None

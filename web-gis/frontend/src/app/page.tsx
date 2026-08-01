@@ -1,634 +1,376 @@
 "use client";
 
-import { useState } from 'react';
+import React, { useState } from 'react';
+import Link from 'next/link';
+import { motion } from 'framer-motion';
+import { useLanguage } from '@/context/LanguageContext';
+import { ArrowRight, Map as MapIcon, ShieldCheck, Users, BookOpen, Heart, Sparkles, CheckCircle2, Trees, Camera, Globe, ChevronRight } from 'lucide-react';
 import dynamic from 'next/dynamic';
 
-// Dynamically import map to avoid SSR issues
-const MapComponent = dynamic(() => import('@/components/Map'), { ssr: false });
-import AboutTab from '@/components/AboutTab';
-import AuthModal from '@/components/AuthModal';
-import AiInsightsPanel from '@/components/AiInsightsPanel';
-import AdminDashboard from '@/components/AdminDashboard';
-import { useAuth } from '@/context/AuthContext';
-import { LogOut, User, Sparkles, Lock, Camera, X } from 'lucide-react';
-import { useRef } from 'react';
+const InteractiveMap = dynamic(() => import('@/components/map/InteractiveMap'), { ssr: false });
 
-const translations = {
-  vi: {
-    title: "Gia Lai Deforestation AI",
-    subtitle: "Hệ thống Cảnh báo & Giám sát Mất rừng",
-    mapTab: "Bản đồ GIS",
-    aboutTab: "Giới thiệu",
-    dashboardTab: "Quản lý Báo cáo",
-    satellite: "Ảnh Vệ tinh (Satellite)",
-    yearLabel: "Năm phân tích:",
-    filterTitle: "Bộ lọc Môi trường",
-    elevation: "Độ cao tối đa",
-    slope: "Độ dốc tối đa",
-    treeCover: "Độ che phủ rừng (Tree Cover 2000) tối thiểu",
-    rainfall: "Lượng mưa tối đa",
-    reportTitle: "Báo Cáo Thực Địa (Check-in)",
-    clickToReport: "Nhấn nút bên dưới để lấy vị trí hiện tại hoặc click vào bản đồ.",
-    getLocation: "📍 Lấy vị trí của tôi",
-    gettingLocation: "Đang dò GPS...",
-    locationError: "Không thể lấy vị trí. Vui lòng bật GPS và cấp quyền cho trình duyệt.",
-    selectedLabel: "Đã chọn:",
-    cancel: "Hủy",
-    commentLabel: "Nội dung (Comment)",
-    commentPlaceholder: "Mô tả hiện trạng...",
-    imageLabel: "Hình ảnh minh chứng",
-    uploadPlaceholder: "Nhấn để tải ảnh từ máy",
-    submitting: "Đang gửi...",
-    submitBtn: "Gửi Báo Cáo",
-    floatingLabel: "Diễn biến Mất rừng tính đến",
-    alertLocation: "Vui lòng click vào bản đồ để chọn tọa độ trước!",
-    alertSize: "Kích thước ảnh không được vượt quá 5MB!",
-    alertSuccess: "Đã gửi báo cáo thành công!",
-    alertError: "Có lỗi xảy ra: ",
-    displayMode: "Chế độ hiển thị",
-    pointMode: "Điểm",
-    heatmapMode: "Khoanh vùng",
-    login: "Đăng nhập",
-    logout: "Đăng xuất",
-    needLoginToReport: "Bạn cần đăng nhập để gửi báo cáo!",
-  },
-  en: {
-    title: "Gia Lai Deforestation AI",
-    subtitle: "Deforestation Monitoring & Warning System",
-    mapTab: "GIS Map",
-    aboutTab: "About Project",
-    dashboardTab: "Admin Dashboard",
-    satellite: "Satellite Imagery",
-    yearLabel: "Analysis Year:",
-    filterTitle: "Environmental Filters",
-    elevation: "Max Elevation",
-    slope: "Max Slope",
-    treeCover: "Min Tree Cover 2000",
-    rainfall: "Max Rainfall",
-    reportTitle: "Field Report (Check-in)",
-    clickToReport: "Click the button below to get your location or click on the map.",
-    getLocation: "📍 Get My Location",
-    gettingLocation: "Searching GPS...",
-    locationError: "Cannot get location. Please enable GPS and allow browser permissions.",
-    selectedLabel: "Selected:",
-    cancel: "Cancel",
-    commentLabel: "Comment",
-    commentPlaceholder: "Describe the situation...",
-    imageLabel: "Evidence Image",
-    uploadPlaceholder: "Click to upload an image",
-    submitting: "Submitting...",
-    submitBtn: "Submit Report",
-    floatingLabel: "Deforestation up to",
-    alertLocation: "Please click on the map to select coordinates first!",
-    alertSize: "Image size must not exceed 5MB!",
-    alertSuccess: "Report submitted successfully!",
-    alertError: "An error occurred: ",
-    displayMode: "Display Mode",
-    pointMode: "Points",
-    heatmapMode: "Heatmap",
-    login: "Login",
-    logout: "Logout",
-    needLoginToReport: "You must log in to submit a report!",
+const fadeInUp = {
+  hidden: { opacity: 0, y: 40 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.8 } }
+};
+
+const staggerContainer = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.2
+    }
   }
 };
 
-export default function Home() {
-  const { user, token, logout } = useAuth();
-  const [showAuthModal, setShowAuthModal] = useState(false);
-
-  const [language, setLanguage] = useState<'vi' | 'en'>('vi');
-  const t = translations[language];
-
-  const [currentYear, setCurrentYear] = useState<number>(2024);
-  const [isSatellite, setIsSatellite] = useState<boolean>(false);
-  
-  // Environmental Filters
-  const [elevationMax, setElevationMax] = useState<number>(2000);
-  const [rainfallMax, setRainfallMax] = useState<number>(3000);
-  const [slopeMax, setSlopeMax] = useState<number>(90);
-  const [treeCoverMin, setTreeCoverMin] = useState<number>(0);
-
-  // Tab State: 'map' or 'about' or 'dashboard'
-  const [activeTab, setActiveTab] = useState<'map' | 'about' | 'dashboard'>('map');
-  const [displayMode, setDisplayMode] = useState<'point' | 'heatmap'>('point');
-  
-  // AI Presentation Mode State
-  const [showAiPanel, setShowAiPanel] = useState(false);
-  const [targetDistrict, setTargetDistrict] = useState<string>('All');
-
-  // Field Report States
-  const [selectedLocation, setSelectedLocation] = useState<{lat: number, lon: number} | null>(null);
-  const [comment, setComment] = useState("");
-  const [file, setFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isGettingLocation, setIsGettingLocation] = useState(false);
-  const [refreshTrigger, setRefreshTrigger] = useState(0);
-  
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const handleGetLocation = () => {
-    if (!navigator.geolocation) {
-      alert(t.locationError);
-      return;
-    }
-    setIsGettingLocation(true);
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        setSelectedLocation({
-          lat: position.coords.latitude,
-          lon: position.coords.longitude
-        });
-        setIsGettingLocation(false);
-      },
-      (error) => {
-        console.error("Error getting location:", error);
-        alert(t.locationError);
-        setIsGettingLocation(false);
-      },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-    );
-  };
-
-  const handleSubmitReport = async () => {
-    if (!user || !token) {
-      alert(t.needLoginToReport);
-      setShowAuthModal(true);
-      return;
-    }
-    
-    if (!selectedLocation) {
-      alert(t.alertLocation);
-      return;
-    }
-    
-    if (file && file.size > 5 * 1024 * 1024) {
-      alert(t.alertSize);
-      return;
-    }
-    
-    setIsSubmitting(true);
-    try {
-      const formData = new FormData();
-      formData.append('lat', selectedLocation.lat.toString());
-      formData.append('lon', selectedLocation.lon.toString());
-      if (comment) formData.append('comment', comment);
-      if (file) formData.append('file', file);
-
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-      const res = await fetch(`${apiUrl}/api/reports`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
-        body: formData,
-      });
-
-      if (!res.ok) throw new Error(t.alertError);
-      
-      alert(t.alertSuccess);
-      
-      // Reset form
-      setComment("");
-      setFile(null);
-      if (imagePreview) {
-        URL.revokeObjectURL(imagePreview);
-        setImagePreview(null);
-      }
-      setSelectedLocation(null);
-      
-      // Trigger map refresh
-      setRefreshTrigger(prev => prev + 1);
-      
-    } catch (err) {
-      alert(t.alertError + err);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+export default function LandingPage() {
+  const { t, language } = useLanguage();
 
   return (
-    <div className="flex flex-col h-screen bg-slate-900 text-slate-100 font-sans">
-      {/* Top Header */}
-      <div className="h-auto md:h-16 border-b border-slate-700 bg-slate-800/80 backdrop-blur flex flex-col md:flex-row items-start md:items-center justify-between px-4 md:px-6 shadow-md z-20 py-3 md:py-0">
-        <div className="flex items-center justify-between w-full md:w-auto mb-3 md:mb-0">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-br from-green-500 to-emerald-700 rounded-xl flex items-center justify-center shadow-lg shadow-green-500/30">
-              <span className="font-bold text-white text-lg">GL</span>
+    <div className="flex flex-col min-h-screen bg-slate-950 text-slate-100 font-sans selection:bg-emerald-500 selection:text-slate-950">
+      
+      {/* Hero Section with Parallax Background */}
+      <section className="relative w-full min-h-[92vh] flex items-center justify-center overflow-hidden bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 text-white pt-8 pb-16">
+        {/* Ambient background image and map opacity */}
+        <div className="absolute inset-0 opacity-30 mix-blend-luminosity">
+          <InteractiveMap />
+        </div>
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/70 to-transparent z-0"></div>
+
+        <motion.div 
+          className="container mx-auto px-6 relative z-10 text-center max-w-5xl"
+          initial="hidden"
+          animate="visible"
+          variants={staggerContainer}
+        >
+          {/* Top Eco Badge */}
+          <motion.div variants={fadeInUp} className="inline-flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/30 px-4 py-1.5 rounded-full mb-8 shadow-inner backdrop-blur-md">
+            <Sparkles size={16} className="text-emerald-400 animate-pulse" />
+            <span className="text-xs font-black uppercase tracking-widest text-emerald-300">
+              {language === 'vi' ? 'Dự Án AI Cảnh Báo Phá Rừng Việt Nam' : 'Vietnam Deforestation AI Risk Project'}
+            </span>
+          </motion.div>
+
+          <motion.h1 
+            variants={fadeInUp}
+            className="text-5xl md:text-7xl font-black mb-6 tracking-tight leading-[1.1] text-transparent bg-clip-text bg-gradient-to-r from-white via-slate-100 to-emerald-300"
+          >
+            {language === 'vi' ? 'VIGIL - CÔNG NGHỆ THỨC GIẤC, ĐẠI NGÀN BÌNH YÊN' : 'VIGIL - AWAKENING TECHNOLOGY, PEACEFUL FORESTS'}
+          </motion.h1>
+
+          <motion.p 
+            variants={fadeInUp}
+            className="text-lg md:text-2xl text-slate-300 mb-10 max-w-3xl mx-auto font-normal leading-relaxed"
+          >
+            {language === 'vi' 
+              ? 'Ứng dụng phân tích ảnh vệ tinh tiên tiến và học máy AI để khoanh vùng rủi ro phá rừng tại Gia Lai, hỗ trợ bảo vệ những cánh rừng tự nhiên.'
+              : 'Applying satellite remote sensing and AI machine learning to monitor forest risks in Gia Lai, protecting natural ecosystems.'}
+          </motion.p>
+
+          <motion.div variants={fadeInUp} className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <Link 
+              href="/map" 
+              className="w-full sm:w-auto inline-flex items-center justify-center space-x-3 bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-400 hover:to-green-500 text-slate-950 font-black text-lg px-9 py-4 rounded-full shadow-2xl shadow-emerald-900/50 transition-all hover:-translate-y-1 group"
+            >
+              <span>{t('landing.hero.exploreBtn')}</span>
+              <ArrowRight size={22} className="group-hover:translate-x-1 transition-transform" />
+            </Link>
+
+            <Link 
+              href="/about"
+              className="w-full sm:w-auto inline-flex items-center justify-center space-x-2 bg-slate-900/80 hover:bg-slate-800 text-amber-400 border border-amber-400/40 font-bold text-base px-7 py-4 rounded-full shadow-lg backdrop-blur-md transition-all hover:-translate-y-1"
+            >
+              <BookOpen size={18} />
+              <span>{language === 'vi' ? 'Tìm Hiểu Dự Án' : 'Learn About Project'}</span>
+            </Link>
+          </motion.div>
+        </motion.div>
+      </section>
+
+      {/* Authentic Project Feature Cards */}
+      <section className="relative z-20 -mt-16 container mx-auto px-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="bg-slate-900/90 backdrop-blur-xl border border-emerald-500/30 p-7 rounded-3xl shadow-2xl text-white flex items-center gap-6 hover:scale-[1.02] hover:border-emerald-400/60 transition-all group">
+            <div className="w-16 h-16 rounded-2xl bg-emerald-500/20 border border-emerald-400/40 flex items-center justify-center text-emerald-400 flex-shrink-0 group-hover:bg-emerald-500 group-hover:text-slate-950 transition-colors shadow-lg">
+              <Trees size={32} />
             </div>
             <div>
-              <h1 className="font-bold text-slate-100 text-base md:text-lg leading-tight">{t.title}</h1>
-              <p className="text-xs text-green-400 font-medium hidden md:block">{t.subtitle}</p>
+              <div className="text-2xl font-black text-amber-400 tracking-tight">
+                {language === 'vi' ? 'Ô Lưới 1 km²' : '1 km² Grid'}
+              </div>
+              <div className="text-xs font-extrabold text-slate-300 uppercase tracking-wider mt-1">
+                {language === 'vi' ? 'Phân Giải Nguy Cơ Phá Rừng' : 'Deforestation Risk Grid Resolution'}
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-slate-900/90 backdrop-blur-xl border border-emerald-500/30 p-7 rounded-3xl shadow-2xl text-white flex items-center gap-6 hover:scale-[1.02] hover:border-emerald-400/60 transition-all group">
+            <div className="w-16 h-16 rounded-2xl bg-amber-500/20 border border-amber-400/40 flex items-center justify-center text-amber-400 flex-shrink-0 group-hover:bg-amber-400 group-hover:text-slate-950 transition-colors shadow-lg">
+              <ShieldCheck size={32} />
+            </div>
+            <div>
+              <div className="text-2xl font-black text-amber-400 tracking-tight">
+                {language === 'vi' ? '10% Nguy Cơ Cao' : 'Top 10% Risk'}
+              </div>
+              <div className="text-xs font-extrabold text-slate-300 uppercase tracking-wider mt-1">
+                {language === 'vi' ? 'Ngưỡng Khoanh Vùng Cảnh Báo Ưu Tiên' : 'Priority Risk Alert Threshold'}
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-slate-900/90 backdrop-blur-xl border border-emerald-500/30 p-7 rounded-3xl shadow-2xl text-white flex items-center gap-6 hover:scale-[1.02] hover:border-emerald-400/60 transition-all group">
+            <div className="w-16 h-16 rounded-2xl bg-teal-500/20 border border-teal-400/40 flex items-center justify-center text-teal-400 flex-shrink-0 group-hover:bg-teal-400 group-hover:text-slate-950 transition-colors shadow-lg">
+              <Users size={32} />
+            </div>
+            <div>
+              <div className="text-2xl font-black text-amber-400 tracking-tight">
+                {language === 'vi' ? 'Cộng Đồng' : 'Community'}
+              </div>
+              <div className="text-xs font-extrabold text-slate-300 uppercase tracking-wider mt-1">
+                {language === 'vi' ? 'Ghi Nhận Báo Cáo Thực Địa' : 'Community Field Reporting'}
+              </div>
             </div>
           </div>
         </div>
+      </section>
 
-        <div className="flex flex-col md:flex-row items-stretch md:items-center gap-3 md:gap-6 w-full md:w-auto">
-          <div className="flex bg-slate-800 rounded-xl p-1 border border-slate-700 w-full md:w-auto">
-            <button 
-              onClick={() => setActiveTab('map')}
-              className={`flex-1 md:flex-none px-3 md:px-4 py-2 rounded-lg text-xs md:text-sm font-medium transition-all duration-200 ${
-                activeTab === 'map' 
-                  ? 'bg-slate-700 text-green-400 shadow-inner' 
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-700/50'
-              }`}
-            >
-              {t.mapTab}
-            </button>
-            <button 
-              onClick={() => setActiveTab('about')}
-              className={`flex-1 md:flex-none px-3 md:px-4 py-2 rounded-lg text-xs md:text-sm font-medium transition-all duration-200 ${
-                activeTab === 'about' 
-                  ? 'bg-slate-700 text-green-400 shadow-inner' 
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-700/50'
-              }`}
-            >
-              {t.aboutTab}
-            </button>
-            {user?.role === 'admin' && (
-              <button 
-                onClick={() => setActiveTab('dashboard')}
-                className={`px-3 md:px-4 py-2 rounded-lg text-xs md:text-sm font-medium transition-all duration-200 ${
-                  activeTab === 'dashboard' 
-                    ? 'bg-slate-700 text-blue-400 shadow-inner' 
-                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-700/50'
-                }`}
+      {/* Community Action & Field Report Section (Authentic Action Box) */}
+      <section className="py-20 bg-slate-950 relative overflow-hidden" id="pledge">
+        <div className="container mx-auto px-6">
+          <div className="bg-gradient-to-r from-emerald-950 via-slate-900 to-green-950 rounded-3xl border border-emerald-500/40 p-8 md:p-12 shadow-2xl relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-8">
+            <div className="max-w-2xl space-y-4">
+              <div className="inline-flex items-center gap-2 bg-amber-400/10 text-amber-400 border border-amber-400/30 px-3 py-1 rounded-full text-xs font-extrabold">
+                <Heart size={14} className="fill-amber-400" />
+                <span>{language === 'vi' ? 'Hành Động Cùng VIGIL' : 'Action With VIGIL'}</span>
+              </div>
+              <h2 className="text-3xl md:text-5xl font-black text-white leading-tight">
+                {language === 'vi' ? 'BẢO VỆ ĐẠI NGÀN GIA LAI' : 'PROTECT GIA LAI FORESTS'}
+              </h2>
+              <p className="text-slate-300 text-base md:text-lg leading-relaxed">
+                {language === 'vi' 
+                  ? 'Chung tay cùng lực lượng kiểm lâm và cộng đồng địa phương gửi báo cáo thực địa kèm hình ảnh trực tiếp trên bản đồ GIS.'
+                  : 'Join rangers and local communities by submitting field reports directly on the GIS map.'}
+              </p>
+            </div>
+
+            <div className="flex-shrink-0 text-center bg-slate-900/90 p-6 rounded-2xl border border-slate-700/80 shadow-xl min-w-[280px]">
+              <div className="text-xl font-bold text-white mb-2">
+                {language === 'vi' ? 'Gửi Báo Cáo Thực Địa' : 'Submit Field Report'}
+              </div>
+              <p className="text-xs text-slate-400 mb-5">
+                {language === 'vi' ? 'Định vị GPS & Tải ảnh thực địa' : 'GPS location & photo upload'}
+              </p>
+
+              <Link
+                href="/map"
+                className="w-full inline-flex items-center justify-center gap-2 py-3.5 px-6 rounded-xl font-black text-sm bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 hover:scale-105 transition-all shadow-lg"
               >
-                {t.dashboardTab}
-              </button>
-            )}
+                <MapIcon size={18} />
+                <span>{language === 'vi' ? 'Mở Bản Đồ & Báo Cáo' : 'Open Map & Report'}</span>
+              </Link>
+            </div>
           </div>
         </div>
+      </section>
 
-        {/* User & Language Toggle */}
-        <div className="flex items-center gap-2 md:gap-4 mt-4 md:mt-0">
-          <button 
-            onClick={() => {
-              setActiveTab('map');
-              setShowAiPanel(!showAiPanel);
-            }}
-            className={`flex items-center space-x-2 px-3 py-1.5 rounded-lg text-sm font-semibold transition-all shadow-lg border ${
-              showAiPanel 
-                ? 'bg-yellow-500 text-slate-900 border-yellow-400' 
-                : 'bg-slate-900/50 text-yellow-400 border-slate-700 hover:bg-slate-800 hover:border-yellow-500/50'
-            }`}
+      {/* Rich Field Photography Gallery (High Visual Impact) */}
+      <section className="py-24 bg-slate-950" id="activities">
+        <div className="container mx-auto px-6">
+          <motion.div 
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-100px" }}
+            variants={fadeInUp}
+            className="text-center max-w-3xl mx-auto mb-16"
           >
-            <Sparkles size={16} />
-            <span className="hidden sm:inline">AI Insights</span>
-          </button>
-
-          {user ? (
-            <div className="flex items-center space-x-3 bg-slate-900/50 px-3 py-1.5 rounded-lg border border-slate-700">
-              <div className="flex items-center space-x-2 text-sm text-green-400 font-medium">
-                <User size={16} />
-                <span className="hidden sm:inline">{user.username}</span>
-              </div>
-              <button 
-                onClick={logout}
-                className="text-xs text-slate-400 hover:text-red-400 transition-colors flex items-center"
-                title={t.logout}
-              >
-                <LogOut size={16} />
-              </button>
+            <div className="inline-flex items-center gap-2 bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-3 py-1 rounded-full text-xs font-extrabold mb-4">
+              <Camera size={14} />
+              <span>{language === 'vi' ? 'Hình Ảnh Thực Địa 2025 - 2026' : 'Field Expeditions 2025 - 2026'}</span>
             </div>
-          ) : (
-            <button 
-              onClick={() => setShowAuthModal(true)}
-              className="px-4 py-1.5 bg-green-600 hover:bg-green-500 text-white rounded-lg text-sm font-semibold transition-colors shadow-lg"
-            >
-              {t.login}
-            </button>
-          )}
+            <h2 className="text-4xl font-black text-white mb-4">{t('landing.activities.title')}</h2>
+            <p className="text-slate-400 text-lg">
+              {t('landing.activities.desc')}
+            </p>
+          </motion.div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {/* Expedition Card 1 - Gia Lai */}
+            <div className="bg-slate-900 rounded-3xl p-6 border border-slate-800 shadow-2xl hover:border-emerald-500/50 transition-all">
+              <div className="flex items-center justify-between mb-4 border-b border-slate-800 pb-3">
+                <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                  <span className="w-3 h-3 rounded-full bg-emerald-400"></span>
+                  <span>Gia Lai 2026</span>
+                </h3>
+                <span className="text-xs text-emerald-400 bg-emerald-950 px-2.5 py-1 rounded-full font-bold border border-emerald-800">K'Bang & Mang Yang</span>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="relative rounded-2xl overflow-hidden group h-44">
+                  <img src="/images/gialai_2026/thuc_dia_1.JPG" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="Gia Lai Field 1" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent opacity-90 group-hover:opacity-100 transition-opacity flex items-end p-3 text-xs text-slate-100 font-semibold leading-snug">
+                    {language === 'vi' ? 'Khảo sát hiện trạng rừng K\'Bang' : 'K\'Bang Forest Canopy Survey'}
+                  </div>
+                </div>
+                <div className="relative rounded-2xl overflow-hidden group h-44">
+                  <img src="/images/gialai_2026/thuc_dia_3.JPG" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="Gia Lai Field 3" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent opacity-90 group-hover:opacity-100 transition-opacity flex items-end p-3 text-xs text-slate-100 font-semibold leading-snug">
+                    {language === 'vi' ? 'Khảo sát điểm mất rừng thực địa' : 'Field Deforestation Inspection'}
+                  </div>
+                </div>
+                <div className="relative rounded-2xl overflow-hidden group h-44">
+                  <img src="/images/gialai_2026/thuc_dia_6.JPG" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="Gia Lai Field 6" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent opacity-90 group-hover:opacity-100 transition-opacity flex items-end p-3 text-xs text-slate-100 font-semibold leading-snug">
+                    {language === 'vi' ? 'Đối chiếu dữ liệu tại Mang Yang' : 'Mang Yang Field Data Verification'}
+                  </div>
+                </div>
+                <div className="relative rounded-2xl overflow-hidden group h-44">
+                  <img src="/images/gialai_2026/thuc_dia_8.JPG" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="Gia Lai Field 8" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent opacity-90 group-hover:opacity-100 transition-opacity flex items-end p-3 text-xs text-slate-100 font-semibold leading-snug">
+                    {language === 'vi' ? 'Làm việc cùng kiểm lâm địa phương' : 'Ranger & Field Team Collaboration'}
+                  </div>
+                </div>
+              </div>
+            </div>
 
-          <div className="flex items-center space-x-1 bg-slate-900 p-1 rounded-lg border border-slate-700">
-            <button 
-              onClick={() => setLanguage('vi')} 
-              className={`px-3 py-1 rounded-md text-xs font-bold transition-all duration-200 ${
-                language === 'vi' ? 'bg-green-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-300'
-              }`}
-            >
-              VI
-            </button>
-            <button 
-              onClick={() => setLanguage('en')} 
-              className={`px-3 py-1 rounded-md text-xs font-bold transition-all duration-200 ${
-                language === 'en' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-300'
-              }`}
-            >
-              EN
-            </button>
+            {/* Expedition Card 2 - Ninh Bình */}
+            <div className="bg-slate-900 rounded-3xl p-6 border border-slate-800 shadow-2xl hover:border-emerald-500/50 transition-all">
+              <div className="flex items-center justify-between mb-4 border-b border-slate-800 pb-3">
+                <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                  <span className="w-3 h-3 rounded-full bg-blue-400"></span>
+                  <span>Ninh Bình 2025</span>
+                </h3>
+                <span className="text-xs text-blue-400 bg-blue-950 px-2.5 py-1 rounded-full font-bold border border-blue-800">
+                  {language === 'vi' ? 'Vườn QG Cúc Phương' : 'Cuc Phuong Nat. Park'}
+                </span>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="relative rounded-2xl overflow-hidden group h-44">
+                  <img src="/images/ninhbinh_2025/nb_1.jpg" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="Ninh Binh Field 1" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent opacity-90 group-hover:opacity-100 transition-opacity flex items-end p-3 text-xs text-slate-100 font-semibold leading-snug">
+                    {language === 'vi' ? 'Hệ sinh thái rừng đá vôi Cúc Phương' : 'Cuc Phuong Karst Ecosystem'}
+                  </div>
+                </div>
+                <div className="relative rounded-2xl overflow-hidden group h-44">
+                  <img src="/images/ninhbinh_2025/nb_2.jpg" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="Ninh Binh Field 2" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent opacity-90 group-hover:opacity-100 transition-opacity flex items-end p-3 text-xs text-slate-100 font-semibold leading-snug">
+                    {language === 'vi' ? 'Khảo sát thảm thực vật & độ che phủ' : 'Vegetation & Canopy Cover Audit'}
+                  </div>
+                </div>
+                <div className="relative rounded-2xl overflow-hidden group h-44">
+                  <img src="/images/ninhbinh_2025/nb_3.jpg" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="Ninh Binh Field 3" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent opacity-90 group-hover:opacity-100 transition-opacity flex items-end p-3 text-xs text-slate-100 font-semibold leading-snug">
+                    {language === 'vi' ? 'Thu thập mẫu đối chứng chỉ số thực vật' : 'Vegetation Index Field Calibration'}
+                  </div>
+                </div>
+                <div className="relative rounded-2xl overflow-hidden group h-44">
+                  <img src="/images/ninhbinh_2025/nb_4.jpg" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="Ninh Binh Field 4" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent opacity-90 group-hover:opacity-100 transition-opacity flex items-end p-3 text-xs text-slate-100 font-semibold leading-snug">
+                    {language === 'vi' ? 'Đội ngũ nghiên cứu VIGIL tại thực địa' : 'VIGIL Research Team Fieldwork'}
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* Main Content Area */}
-      <div className="flex-1 flex flex-col md:flex-row overflow-hidden relative">
-        {activeTab === 'map' ? (
-          <>
-            {/* Sidebar Controls */}
-            <div className="w-full md:w-80 bg-slate-800 flex flex-col shadow-xl z-10 flex-shrink-0 border-t md:border-t-0 md:border-r border-slate-700 overflow-y-auto max-h-[50vh] md:max-h-none order-last md:order-first">
-              <div className="p-6 space-y-8">
-                
-                {/* Satellite toggle */}
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-slate-300">{t.satellite}</span>
-                  <button 
-                    onClick={() => setIsSatellite(!isSatellite)}
-                    className={`w-12 h-6 rounded-full transition-colors ${isSatellite ? 'bg-green-500' : 'bg-slate-600'} relative shadow-inner`}
-                  >
-                    <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all shadow-sm ${isSatellite ? 'left-7' : 'left-1'}`} />
-                  </button>
+      {/* Clean Social Media & Community Hub Cards (Replaces Blank FB Iframe) */}
+      <section className="py-24 bg-slate-900 text-white" id="community">
+        <div className="container mx-auto px-6">
+          <div className="text-center max-w-3xl mx-auto mb-16">
+            <div className="inline-flex items-center gap-2 bg-blue-500/10 text-blue-400 border border-blue-500/30 px-3 py-1 rounded-full text-xs font-extrabold mb-4">
+              <Globe size={14} />
+              <span>{language === 'vi' ? 'Kết Nối & Cộng Đồng' : 'Community & Social Hub'}</span>
+            </div>
+            <h2 className="text-3xl md:text-5xl font-black mb-4">
+              {language === 'vi' ? 'KẾT NỐI VỚI VIGIL' : 'CONNECT WITH VIGIL'}
+            </h2>
+            <p className="text-slate-400 text-base md:text-lg">
+              {language === 'vi' 
+                ? 'Theo dõi các bài viết, chuyến khảo sát thực địa và kết quả nghiên cứu mới nhất của dự án VIGIL.'
+                : 'Follow news, field trip updates and research publications from the VIGIL project.'}
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {/* Facebook Card */}
+            <div className="bg-slate-950 p-8 rounded-3xl border border-slate-800 shadow-2xl flex flex-col justify-between hover:border-blue-500/50 transition-all group">
+              <div>
+                <div className="w-14 h-14 bg-blue-600/20 text-blue-400 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                  <Globe size={28} />
                 </div>
-
-                {/* Display Mode toggle */}
-                <div className="flex items-center justify-between mt-2">
-                  <span className="text-sm font-medium text-slate-300">{t.displayMode}</span>
-                  <div className="flex bg-slate-900/50 rounded-lg p-1 border border-slate-700/50">
-                    <button 
-                      onClick={() => setDisplayMode('point')}
-                      className={`px-3 py-1 text-xs font-semibold rounded-md transition-colors ${displayMode === 'point' ? 'bg-slate-700 text-green-400 shadow-sm' : 'text-slate-500 hover:text-slate-300'}`}
-                    >
-                      {t.pointMode}
-                    </button>
-                    <button 
-                      onClick={() => setDisplayMode('heatmap')}
-                      className={`px-3 py-1 text-xs font-semibold rounded-md transition-colors ${displayMode === 'heatmap' ? 'bg-slate-700 text-green-400 shadow-sm' : 'text-slate-500 hover:text-slate-300'}`}
-                    >
-                      {t.heatmapMode}
-                    </button>
-                  </div>
-                </div>
-
-                {/* Time Slider */}
-                <div className="bg-slate-900/50 p-4 rounded-xl border border-slate-700/50">
-                  <div className="flex justify-between text-sm mb-3">
-                    <span className="text-slate-300">{t.yearLabel}</span>
-                    <span className="font-bold text-green-400 bg-green-400/10 px-2 py-0.5 rounded text-xs">{currentYear}</span>
-                  </div>
-                  <input 
-                    type="range" 
-                    min="2001" max="2024" 
-                    value={currentYear}
-                    onChange={(e) => setCurrentYear(parseInt(e.target.value))}
-                    className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-green-500"
-                  />
-                  <div className="flex justify-between text-xs text-slate-500 mt-2 font-mono">
-                    <span>2001</span>
-                    <span>2024</span>
-                  </div>
-                </div>
-                
-                {/* Filters */}
-                <div>
-                  <h3 className="text-sm font-bold text-slate-200 mb-4 uppercase tracking-wider">{t.filterTitle}</h3>
-                  <div className="space-y-5">
-                    <div>
-                      <label className="flex justify-between text-xs mb-2 text-slate-400">
-                        <span>{t.elevation}</span>
-                        <span className="font-mono text-emerald-400">{elevationMax}m</span>
-                      </label>
-                      <input 
-                        type="range" min="0" max="3000" step="50"
-                        value={elevationMax}
-                        onChange={(e) => setElevationMax(Number(e.target.value))}
-                        className="w-full accent-emerald-500"
-                      />
-                    </div>
-                    <div>
-                      <label className="flex justify-between text-xs mb-2 text-slate-400">
-                        <span>{t.slope}</span>
-                        <span className="font-mono text-emerald-400">{slopeMax}°</span>
-                      </label>
-                      <input 
-                        type="range" min="0" max="90" step="1"
-                        value={slopeMax}
-                        onChange={(e) => setSlopeMax(Number(e.target.value))}
-                        className="w-full accent-emerald-500"
-                      />
-                    </div>
-                    <div>
-                      <label className="flex justify-between text-xs mb-2 text-slate-400">
-                        <span>{t.treeCover}</span>
-                        <span className="font-mono text-emerald-400">{treeCoverMin}%</span>
-                      </label>
-                      <input 
-                        type="range" min="0" max="100" step="5"
-                        value={treeCoverMin}
-                        onChange={(e) => setTreeCoverMin(Number(e.target.value))}
-                        className="w-full accent-emerald-500"
-                      />
-                    </div>
-                    <div>
-                      <label className="flex justify-between text-xs mb-2 text-slate-400">
-                        <span>{t.rainfall}</span>
-                        <span className="font-mono text-blue-400">{rainfallMax}mm</span>
-                      </label>
-                      <input 
-                        type="range" min="0" max="5000" step="100"
-                        value={rainfallMax}
-                        onChange={(e) => setRainfallMax(Number(e.target.value))}
-                        className="w-full accent-blue-500"
-                      />
-                    </div>
-                  </div>
-                </div>
-                
-                {/* Field Report Form */}
-                <div className="bg-slate-900/50 p-4 rounded-xl border border-slate-700/50">
-                  <h3 className="text-sm font-bold text-slate-200 mb-3 uppercase tracking-wider">{t.reportTitle}</h3>
-                  
-                  {!user ? (
-                    <div className="flex flex-col items-center justify-center py-6 border border-dashed border-slate-600 rounded-lg bg-slate-800/50">
-                      <Lock size={32} className="text-slate-500 mb-3" />
-                      <p className="text-sm text-slate-400 text-center mb-4 px-4">{t.needLoginToReport}</p>
-                      <button 
-                        onClick={() => setShowAuthModal(true)}
-                        className="px-4 py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg text-sm font-semibold transition-colors"
-                      >
-                        {t.login}
-                      </button>
-                    </div>
-                  ) : (
-                    <>
-                      {!selectedLocation ? (
-                        <div className="p-4 border border-dashed border-slate-600 rounded-lg text-center flex flex-col items-center gap-3 bg-slate-800 mb-4">
-                          <span className="text-xs text-slate-400">{t.clickToReport}</span>
-                          <button 
-                            onClick={handleGetLocation}
-                            disabled={isGettingLocation}
-                            className={`w-full py-2 rounded-lg text-sm font-bold transition-all shadow-lg ${
-                              isGettingLocation
-                                ? 'bg-slate-700 text-slate-500 cursor-not-allowed'
-                                : 'bg-blue-600 text-white hover:bg-blue-500 hover:-translate-y-0.5'
-                            }`}
-                          >
-                            {isGettingLocation ? t.gettingLocation : t.getLocation}
-                          </button>
-                        </div>
-                      ) : (
-                        <div className="mb-4 text-xs bg-green-900/30 border border-green-800/50 p-2 rounded flex justify-between items-center">
-                          <span className="text-green-400">
-                            {t.selectedLabel} {selectedLocation.lat.toFixed(4)}, {selectedLocation.lon.toFixed(4)}
-                          </span>
-                          <button 
-                            onClick={() => setSelectedLocation(null)}
-                            className="text-slate-400 hover:text-red-400 underline font-medium ml-2"
-                          >
-                            {t.cancel}
-                          </button>
-                        </div>
-                      )}
-
-                      <div className="space-y-4">
-                        <div>
-                          <label className="text-xs text-slate-400 font-medium">{t.commentLabel}</label>
-                          <textarea 
-                            className="w-full mt-1 p-3 bg-slate-800 rounded-lg border border-slate-600 text-sm focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none resize-none h-24 transition-all"
-                            placeholder={t.commentPlaceholder}
-                            value={comment}
-                            onChange={(e) => setComment(e.target.value)}
-                            disabled={!selectedLocation || isSubmitting}
-                          />
-                        </div>
-                        
-                        <div>
-                          <label className="text-xs text-slate-400 font-medium mb-1 block">{t.imageLabel}</label>
-                          <div className="relative w-full h-32 mt-1 rounded-xl border-2 border-dashed border-slate-600 bg-slate-800/50 flex items-center justify-center overflow-hidden transition-colors hover:bg-slate-700/50 group">
-                            
-                            {/* Hidden File Input */}
-                            <input 
-                              type="file" 
-                              accept="image/png, image/jpeg, image/jpg"
-                              ref={fileInputRef}
-                              className="hidden"
-                              onChange={(e) => {
-                                if (e.target.files && e.target.files[0]) {
-                                  const selectedFile = e.target.files[0];
-                                  setFile(selectedFile);
-                                  
-                                  // Revoke old object URL to prevent memory leaks
-                                  if (imagePreview) URL.revokeObjectURL(imagePreview);
-                                  setImagePreview(URL.createObjectURL(selectedFile));
-                                }
-                              }}
-                              disabled={!selectedLocation || isSubmitting}
-                            />
-
-                            {/* Image Preview or Upload Placeholder */}
-                            {imagePreview ? (
-                              <>
-                                <img 
-                                  src={imagePreview} 
-                                  alt="Preview" 
-                                  className="w-full h-full object-cover" 
-                                />
-                                <button
-                                  type="button"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setFile(null);
-                                    if (imagePreview) URL.revokeObjectURL(imagePreview);
-                                    setImagePreview(null);
-                                    if (fileInputRef.current) fileInputRef.current.value = '';
-                                  }}
-                                  className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white p-1 rounded-full shadow-lg transition-transform hover:scale-110"
-                                >
-                                  <X size={14} strokeWidth={3} />
-                                </button>
-                              </>
-                            ) : (
-                              <button
-                                type="button"
-                                onClick={() => fileInputRef.current?.click()}
-                                disabled={!selectedLocation || isSubmitting}
-                                className={`flex flex-col items-center justify-center w-full h-full text-slate-500 transition-colors ${
-                                  !selectedLocation || isSubmitting ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:text-green-400'
-                                }`}
-                              >
-                                <Camera size={28} className="mb-2" />
-                                <span className="text-[10px] font-medium tracking-wide uppercase">{t.uploadPlaceholder}</span>
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                        
-                        <button 
-                          onClick={handleSubmitReport}
-                          disabled={!selectedLocation || isSubmitting}
-                          className={`w-full py-3 rounded-lg text-sm font-bold transition-all shadow-lg ${
-                            !selectedLocation || isSubmitting
-                              ? 'bg-slate-700 text-slate-500 cursor-not-allowed'
-                              : 'bg-green-600 text-white hover:bg-green-500 hover:-translate-y-0.5'
-                          }`}
-                        >
-                          {isSubmitting ? t.submitting : t.submitBtn}
-                        </button>
-                      </div>
-                    </>
-                  )}
-                </div>
+                <h3 className="text-xl font-bold mb-3 text-white">Facebook Fanpage</h3>
+                <p className="text-sm text-slate-400 leading-relaxed mb-6">
+                  {language === 'vi' 
+                    ? 'Cập nhật tin tức, hình ảnh thực địa và các chiến dịch truyền thông bảo vệ rừng tự nhiên.'
+                    : 'Get official news, field photos, and forest protection campaigns.'}
+                </p>
               </div>
+              <a
+                href="https://www.facebook.com/share/18yn8UxqPE/?mibextid=wwXIfr"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full py-3.5 px-5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl shadow-lg transition-all text-center flex items-center justify-center gap-2 text-sm"
+              >
+                <span>{language === 'vi' ? 'Ghé thăm Fanpage Facebook' : 'Visit Facebook Page'}</span>
+                <ArrowRight size={16} />
+              </a>
             </div>
 
-            {/* Main Map Area */}
-            <div className="flex-1 relative order-first md:order-last h-[50vh] md:h-auto">
-              <MapComponent 
-                currentYear={currentYear} 
-                filters={{ elevationMax, rainfallMax, slopeMax, treeCoverMin }} 
-                isSatellite={isSatellite} 
-                selectedLocation={selectedLocation}
-                onLocationSelect={(lat: number, lon: number) => setSelectedLocation({lat, lon})}
-                refreshTrigger={refreshTrigger}
-                language={language}
-                displayMode={displayMode}
-                targetDistrict={targetDistrict}
-              />
-              
-              {/* Floating Indicator */}
-              <div className="absolute top-6 left-6 bg-slate-900/80 backdrop-blur-md px-5 py-3 rounded-2xl border border-slate-700 shadow-2xl pointer-events-none">
-                <p className="text-[10px] text-slate-400 uppercase tracking-widest font-semibold">{t.floatingLabel}</p>
-                <p className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-br from-white to-slate-400 mt-1">{currentYear}</p>
+            {/* Email Contact Card */}
+            <div className="bg-slate-950 p-8 rounded-3xl border border-slate-800 shadow-2xl flex flex-col justify-between hover:border-emerald-500/50 transition-all group">
+              <div>
+                <div className="w-14 h-14 bg-emerald-600/20 text-emerald-400 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-emerald-600 group-hover:text-white transition-colors">
+                  <Users size={28} />
+                </div>
+                <h3 className="text-xl font-bold mb-3 text-white">
+                  {language === 'vi' ? 'Email Hợp Tác' : 'Collaboration Email'}
+                </h3>
+                <p className="text-sm text-slate-400 leading-relaxed mb-6 font-mono">
+                  vigil.greenorg@gmail.com
+                </p>
+                <p className="text-xs text-slate-500 mb-6">
+                  {language === 'vi' 
+                    ? 'Liên hệ trao đổi chuyên môn, hợp tác dữ liệu viễn thám và đóng góp dự án.'
+                    : 'Contact us for academic collaboration and remote sensing data sharing.'}
+                </p>
               </div>
+              <Link
+                href="/contact"
+                className="w-full py-3.5 px-5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl shadow-lg transition-all text-center flex items-center justify-center gap-2 text-sm"
+              >
+                <span>{language === 'vi' ? 'Đến Trang Liên Hệ' : 'Go to Contact Page'}</span>
+                <ArrowRight size={16} />
+              </Link>
             </div>
 
-            {/* AI Insights Panel */}
-            {showAiPanel && (
-              <AiInsightsPanel 
-                onClose={() => setShowAiPanel(false)}
-                targetDistrict={targetDistrict}
-                setTargetDistrict={setTargetDistrict}
-                language={language}
-              />
-            )}
-          </>
-        ) : activeTab === 'dashboard' ? (
-          <div className="flex-1 overflow-y-auto bg-slate-900/50 p-4 md:p-8 flex justify-center">
-            <div className="w-full h-full max-w-6xl mt-2 md:mt-6 mb-12 relative">
-              <AdminDashboard 
-                language={language}
-                onViewOnMap={(lat, lon) => {
-                  setSelectedLocation({lat, lon});
-                  setActiveTab('map');
-                }}
-              />
+            {/* Publication Card */}
+            <div className="bg-slate-950 p-8 rounded-3xl border border-slate-800 shadow-2xl flex flex-col justify-between hover:border-amber-500/50 transition-all group">
+              <div>
+                <div className="w-14 h-14 bg-amber-500/20 text-amber-400 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-amber-400 group-hover:text-slate-950 transition-colors">
+                  <BookOpen size={28} />
+                </div>
+                <h3 className="text-xl font-bold mb-3 text-white">
+                  {language === 'vi' ? 'Công Bố Khoa Học' : 'Scientific Publications'}
+                </h3>
+                <p className="text-sm text-slate-400 leading-relaxed mb-6">
+                  {language === 'vi' 
+                    ? 'Xem báo cáo phương pháp luận mô hình Random Forest và tập dữ liệu vệ tinh.'
+                    : 'Explore Random Forest methodology reports and satellite datasets.'}
+                </p>
+              </div>
+              <Link
+                href="/publication"
+                className="w-full py-3.5 px-5 bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold rounded-xl shadow-lg transition-all text-center flex items-center justify-center gap-2 text-sm"
+              >
+                <span>{language === 'vi' ? 'Xem Trang Xuất Bản' : 'View Publication Page'}</span>
+                <ArrowRight size={16} />
+              </Link>
             </div>
           </div>
-        ) : (
-          <div className="flex-1 overflow-y-auto bg-slate-900/50 p-4 md:p-8 flex justify-center">
-            <div className="w-full max-w-4xl bg-slate-800 border border-slate-700 rounded-2xl shadow-2xl overflow-hidden mt-2 md:mt-6 mb-12 relative">
-              <AboutTab language={language} />
-            </div>
-          </div>
-        )}
-      </div>
+        </div>
+      </section>
 
-      {/* Auth Modal */}
-      {showAuthModal && (
-        <AuthModal 
-          onClose={() => setShowAuthModal(false)} 
-          language={language}
-        />
-      )}
     </div>
   );
 }

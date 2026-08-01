@@ -1,0 +1,44 @@
+Master tables (research standard) — Roads + GFW Integrated Alerts
+Generated (UTC): 2026-02-03T13:36:50Z
+
+Inputs:
+- Sample tables (from GEE Assets -> Drive CSV):
+  * KBang_train_samples_v1 Final.csv
+  * KBang_test_samples_v1 final.csv
+  * MangYang_train_samples_v1.csv
+  * MangYang_test_samples_v1.csv
+- Roads: clipped OSM roads (Geofabrik 'free shapefile' roads layer)
+- Alerts rasters (GeoTIFF, EPSG:4326):
+  * kbang_gfw_integrated_alerts_2021_latest.tif
+  * mangyang_gfw_integrated_alerts_2021_latest.tif
+
+What was added:
+1) Distance-to-road feature (meters):
+   - dist_to_nearest_road_m
+   Method: min Euclidean distance in EPSG:32648 (UTM 48N) from each sample point to nearest road line.
+
+2) Integrated alerts features sampled at each point (from band b1):
+   - gfw_integrated_alert_b1  (raw pixel value)
+   - gfw_integrated_alert_present  (1 if b1 > 0 else 0)
+
+3) Research-standard metadata columns:
+   - district  (KBang / MangYang)
+   - split     (train / test)
+   - label_std (standardized label column)
+     * If original table had 'label' -> label_std = label
+     * Else if had 'defo' -> label_std = defo
+     label_std stored as integer (0/1). Original label columns are preserved.
+
+Outputs (save to 04_outputs_tables):
+- KBang_train_master.csv
+- KBang_test_master.csv
+- MangYang_train_master.csv
+- MangYang_test_master.csv
+- ALL_master_combined.csv
+
+Row counts:
+- KBang train: 3200
+- KBang test:  800
+- MangYang train: 1588
+- MangYang test:  412
+- Combined total: 6000

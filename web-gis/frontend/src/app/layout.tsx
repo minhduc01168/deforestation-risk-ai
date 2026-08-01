@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
+import Header from "@/components/layout/Header";
+import Footer from "@/components/layout/Footer";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -14,8 +16,15 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Gia Lai Deforestation Web GIS",
-  description: "Hệ thống Cảnh báo & Giám sát Mất rừng Gia Lai",
+  title: "VIGIL - Giám Sát & Cảnh Báo Mất Rừng Gia Lai | AI Deforestation Monitoring & Early Warning Platform",
+  description: "Hệ thống AI & Viễn thám Giám sát & Cảnh báo Nguy cơ Mất rừng Tỉnh Gia Lai",
+  icons: {
+    icon: [
+      { url: '/images/logo.png' },
+    ],
+    shortcut: '/images/logo.png',
+    apple: '/images/logo.png',
+  },
 };
 
 export default function RootLayout({
@@ -30,7 +39,11 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         <Providers>
-          {children}
+          <Header />
+          <main className="flex-grow flex flex-col">
+            {children}
+          </main>
+          <Footer />
         </Providers>
       </body>
     </html>

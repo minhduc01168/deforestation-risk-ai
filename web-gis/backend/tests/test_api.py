@@ -34,6 +34,8 @@ def mock_db_session(mocker):
     mock_session.query.return_value.all.return_value = [
         mocker.Mock(id=1, geom=mock_geom, comment="Test comment", image_url="/uploads/test.jpg", user_ip_hash="hash", created_at="2026-06-10T00:00:00Z", lat=14.1, lon=108.4)
     ]
+    # For rate limiting, mock query.filter.count()
+    mock_session.query.return_value.filter.return_value.count.return_value = 0
     # For to_wkt() and other geometry functions, just mock scalars
     mock_session.scalar.return_value = "POINT(108.4 14.1)"
     return mock_session

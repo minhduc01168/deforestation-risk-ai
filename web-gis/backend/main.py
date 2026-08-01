@@ -8,8 +8,9 @@ from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
 from geoalchemy2.elements import WKTElement
 from geoalchemy2.shape import to_shape
-from typing import List
+from typing import List, Optional
 import json
+from datetime import datetime, timedelta
 
 import models, schemas, auth
 from fastapi.security import OAuth2PasswordRequestForm
@@ -111,15 +112,26 @@ async def create_report(
     lat: float = Form(...),
     lon: float = Form(...),
     comment: str = Form(None),
+    image_url_str: str = Form(None, alias="image_url"),
     file: UploadFile = File(None),
     db: Session = Depends(get_db),
-    current_user: models.User = Depends(auth.get_current_user)
+    current_user: Optional[models.User] = Depends(auth.get_optional_user)
 ):
     # Hash User IP
     client_ip = request.client.host if request.client else "127.0.0.1"
     user_ip_hash = hash_ip(client_ip)
+    
+    # Rate Limiting: Max 3 reports per 10 minutes per IP
+    ten_minutes_ago = datetime.utcnow() - timedelta(minutes=10)
+    report_count = db.query(models.FieldReport).filter(
+        models.FieldReport.user_ip_hash == user_ip_hash,
+        models.FieldReport.created_at >= ten_minutes_ago
+    ).count()
 
-    image_url = None
+    if report_count >= 3:
+        raise HTTPException(status_code=429, detail="Too Many Requests. Please wait 10 minutes.")
+
+    image_url = image_url_str
     if file:
         # Validate image extension
         ext = file.filename.split('.')[-1].lower()
@@ -143,7 +155,7 @@ async def create_report(
         geom=geom,
         comment=comment,
         image_url=image_url,
-        user_id=current_user.id,
+        user_id=current_user.id if current_user else None,
         user_ip_hash=user_ip_hash
     )
     
@@ -162,11 +174,8 @@ async def create_report(
 
 @app.get("/api/reports", response_model=List[schemas.ReportResponse])
 def get_reports(
-    db: Session = Depends(get_db),
-    current_user: models.User = Depends(auth.get_current_user)
+    db: Session = Depends(get_db)
 ):
-    if current_user.role != "admin":
-        raise HTTPException(status_code=403, detail="Not enough permissions")
     reports = db.query(models.FieldReport).all()
     res = []
     for r in reports:
@@ -181,6 +190,23 @@ def get_reports(
             created_at=r.created_at
         ))
     return res
+
+@app.post("/api/contact", response_model=schemas.ContactResponse)
+def create_contact_message(contact: schemas.ContactCreate, db: Session = Depends(get_db)):
+    new_msg = models.ContactMessage(
+        name=contact.name,
+        email=contact.email,
+        organization=contact.organization,
+        message=contact.message
+    )
+    db.add(new_msg)
+    db.commit()
+    db.refresh(new_msg)
+    return new_msg
+
+@app.get("/api/contact", response_model=List[schemas.ContactResponse])
+def get_contact_messages(db: Session = Depends(get_db), current_user: models.User = Depends(auth.require_admin)):
+    return db.query(models.ContactMessage).order_by(models.ContactMessage.created_at.desc()).all()
 
 @app.get("/")
 def read_root():

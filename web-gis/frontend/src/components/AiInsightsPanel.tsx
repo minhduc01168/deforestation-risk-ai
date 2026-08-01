@@ -19,14 +19,14 @@ export default function AiInsightsPanel({
   const t = {
     vi: {
       title: "Phân tích Trí Tuệ Nhân Tạo",
-      subtitle: "Random Forest Model Insights",
-      featureImportance: "Độ Quan Trọng Của Yếu Tố (Feature Importance)",
+      subtitle: "Phân tích Mô hình AI Random Forest",
+      featureImportance: "Độ Quan Trọng Của Yếu Tố Môi Trường",
       descFeature: "Biểu đồ giải thích các yếu tố môi trường có tác động lớn nhất đến nguy cơ mất rừng, giúp mô hình minh bạch không bị 'hộp đen'.",
-      areaTransfer: "Kiểm Thử Chéo Vùng (Area Transfer Validation)",
+      areaTransfer: "Kiểm Thử Chéo Vùng",
       descTransfer: "Khả năng nhân rộng: Mô hình được huấn luyện 100% tại K'Bang, sau đó dự đoán mù tại Mang Yang để kiểm chứng độ khái quát hóa.",
       btnAll: "Toàn tỉnh Gia Lai",
-      btnKbang: "Bay tới K'Bang (Vùng Train)",
-      btnMangyang: "Bay tới Mang Yang (Vùng Test)",
+      btnKbang: "Bay tới K'Bang (Vùng Huấn luyện)",
+      btnMangyang: "Bay tới Mang Yang (Vùng Thử nghiệm)",
     },
     en: {
       title: "AI Insights Analysis",
@@ -136,15 +136,15 @@ export default function AiInsightsPanel({
             </button>
 
             <button
-              onClick={() => setTargetDistrict('Mang Yang')}
+              onClick={() => setTargetDistrict('MangYang')}
               className={`w-full text-left px-4 py-3 rounded-lg border flex items-center justify-between transition-all ${
-                targetDistrict === 'Mang Yang' 
+                targetDistrict === 'MangYang' 
                 ? 'bg-blue-900/40 border-blue-500 shadow-inner' 
                 : 'bg-slate-900/50 border-slate-700 hover:border-blue-500/50 hover:bg-slate-800'
               }`}
             >
               <span className="text-sm font-semibold text-blue-400">{t.btnMangyang}</span>
-              {targetDistrict === 'Mang Yang' && <div className="w-2 h-2 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8)]" />}
+              {targetDistrict === 'MangYang' && <div className="w-2 h-2 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8)]" />}
             </button>
           </div>
         </section>
