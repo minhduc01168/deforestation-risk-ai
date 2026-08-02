@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '@/context/LanguageContext';
-import { ChevronDown, ChevronUp, Download, FileText, CheckCircle, Layers, BookOpen, BarChart3, Database, Compass } from 'lucide-react';
+import { ChevronDown, ChevronUp, Download, FileText, CheckCircle, Layers, BookOpen, BarChart3, Database, Compass, ExternalLink } from 'lucide-react';
 
 export default function PublicationPage() {
   const { t, language } = useLanguage();
@@ -52,12 +52,12 @@ export default function PublicationPage() {
       images: [
         {
           src: '/images/Figure3_ROC_split.png',
-          alt: 'ROC curves for train-test split',
+          alt: isVi ? 'Biểu đồ đường cong ROC cho tập huấn luyện và kiểm tra' : 'ROC curves for train-test split',
           caption: isVi ? 'Hình 1. Đường cong ROC cho tập huấn luyện - kiểm tra.' : 'Figure 1. ROC curves for the provided train-test split.'
         },
         {
           src: '/images/Figure6_RF_importance.png',
-          alt: 'Random forest feature importance',
+          alt: isVi ? 'Mức độ quan trọng đặc trưng trong mô hình Rừng ngẫu nhiên' : 'Random forest feature importance',
           caption: isVi ? 'Hình 2. Mức độ quan trọng của đặc trưng trong Rừng ngẫu nhiên.' : 'Figure 2. Random forest feature importance.'
         }
       ]
@@ -76,6 +76,14 @@ export default function PublicationPage() {
     ? sections
     : sections.filter(s => s.id === selectedSection);
 
+  const paperTitle = isVi
+    ? "Pipeline Học Máy Có Khả Năng Diễn Giải Cho Dự Báo Nguy Cơ Mất Rừng Tại Việt Nam Độ Phân Giải 1 km"
+    : "An Interpretable Machine Learning Pipeline for Deforestation Risk Prediction in Vietnam at 1 km Resolution";
+
+  const paperTags = isVi
+    ? ["Tỉnh Gia Lai", "Huyện K'Bang", "Huyện Mang Yang", "Rừng Ngẫu Nhiên", "Hồi Quy Logistic", "Google Earth Engine"]
+    : ["Gia Lai Province", "K'Bang District", "Mang Yang District", "Random Forest", "Logistic Regression", "Google Earth Engine"];
+
   return (
     <div className="min-h-screen bg-[#f9fafb] text-gray-800 pt-24 pb-16">
       <div className="container mx-auto px-4 md:px-8 max-w-4xl">
@@ -87,15 +95,15 @@ export default function PublicationPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
         >
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-extrabold mb-4 border"
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold mb-4 border uppercase tracking-wider"
             style={{ backgroundColor: '#e8f5ee', color: '#005e38', borderColor: 'rgba(0,94,56,0.3)' }}>
             <FileText size={14} />
             <span>{isVi ? 'Công Bố Khoa Học' : 'Scientific Publication'}</span>
           </div>
-          <h1 className="text-3xl md:text-5xl font-black mb-4 leading-tight" style={{ color: '#005e38' }}>
+          <h1 className="text-3xl md:text-5xl font-extrabold mb-4 leading-snug tracking-normal" style={{ color: '#005e38' }}>
             {t('publication.hero_title')}
           </h1>
-          <p className="text-base md:text-lg text-gray-600 max-w-2xl mx-auto mb-3">
+          <p className="text-base md:text-lg text-gray-600 max-w-2xl mx-auto mb-3" style={{ textWrap: 'balance' } as React.CSSProperties}>
             {t('publication.hero_subtitle')}
           </p>
           <p className="text-sm md:text-base font-semibold" style={{ color: '#c98d26' }}>
@@ -114,7 +122,7 @@ export default function PublicationPage() {
           <div className="p-6 md:p-8">
             <div className="flex flex-wrap items-center gap-2 mb-4">
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                <CheckCircle size={12} /> {isVi ? 'Đã chấp nhận (Accepted)' : 'Accepted'}
+                <CheckCircle size={12} /> {isVi ? 'Đã chấp nhận' : 'Accepted'}
               </span>
               <span className="px-3 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200">
                 MDPI Remote Sensing · Q1
@@ -122,12 +130,13 @@ export default function PublicationPage() {
               <span className="ml-auto text-sm font-bold text-gray-400">2025</span>
             </div>
 
-            <h2 className="text-xl md:text-2xl font-black mb-3 leading-snug" style={{ color: '#005e38' }}>
-              An Interpretable Machine Learning Pipeline for Deforestation Risk Prediction in Vietnam at 1 km Resolution
+            {/* Paper Title — Refined font weight to extrabold + leading-snug for clean Vietnamese diacritics */}
+            <h2 className="text-xl md:text-2xl font-extrabold mb-3 leading-snug tracking-normal" style={{ color: '#005e38' }}>
+              {paperTitle}
             </h2>
 
             <div className="flex flex-wrap gap-2 mb-6">
-              {["Gia Lai Province", "K'Bang", "Mang Yang", "Random Forest", "Logistic Regression", "Google Earth Engine"].map(tag => (
+              {paperTags.map(tag => (
                 <span key={tag} className="text-xs px-2.5 py-1 rounded-full font-semibold"
                   style={{ backgroundColor: '#e8f5ee', color: '#005e38' }}>
                   ◆ {tag}
@@ -136,7 +145,7 @@ export default function PublicationPage() {
             </div>
 
             {/* Actions Bar */}
-            <div className="flex flex-wrap items-center gap-3 pt-2 border-t" style={{ borderColor: 'rgba(0,94,56,0.1)' }}>
+            <div className="flex flex-wrap items-center gap-3 pt-4 border-t" style={{ borderColor: 'rgba(0,94,56,0.1)' }}>
               <button
                 onClick={() => setDetailsOpen(o => !o)}
                 className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold border-2 transition-all shadow-sm"
@@ -156,7 +165,8 @@ export default function PublicationPage() {
                 onClick={(e) => e.preventDefault()}
                 className="inline-flex items-center gap-2 px-4 py-2.5 bg-gray-100 text-gray-400 rounded-xl text-sm font-medium cursor-not-allowed opacity-70 border border-gray-200"
               >
-                {t('publication.btn_mdpi')}
+                <ExternalLink size={15} />
+                <span>{t('publication.btn_mdpi')}</span>
               </a>
 
               <a
@@ -187,7 +197,7 @@ export default function PublicationPage() {
                   style={{ borderColor: 'rgba(0,94,56,0.1)' }}>
 
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-extrabold uppercase tracking-widest text-gray-500">
+                    <span className="text-xs font-bold uppercase tracking-wider text-gray-500">
                       {isVi ? 'Mục xem:' : 'Filter section:'}
                     </span>
                   </div>
@@ -201,7 +211,7 @@ export default function PublicationPage() {
                     >
                       <span className="truncate pr-2">
                         {selectedSection === 'all'
-                          ? (isVi ? 'Tất cả các mục (Full paper)' : 'All Sections')
+                          ? (isVi ? 'Tất cả các mục' : 'All Sections')
                           : sections.find(s => s.id === selectedSection)?.title
                         }
                       </span>
