@@ -7,7 +7,7 @@
     "contact": "Contact Us"
   },
   "footer": {
-    "description": "A project focused on monitoring and forecasting deforestation risks using AI.",
+    "description": "An AI-powered early warning system for forest loss monitoring across Vietnam.",
     "rights": "© 2026 VIGIL Web-GIS. All rights reserved."
   },
   "landing": {
@@ -40,7 +40,7 @@
     },
     "activities": {
       "title": "Field Activities",
-      "desc": "Our journey of bringing technology from the lab to real forests to validate the AI models."
+      "desc": "The journey of taking AI technology from the research lab directly into real forests — to validate models, listen to communities, and deepen our understanding."
     }
   },
   "about": {

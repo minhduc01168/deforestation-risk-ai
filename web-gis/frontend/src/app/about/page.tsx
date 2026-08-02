@@ -125,7 +125,7 @@ export default function AboutPage() {
               <div className="w-full md:w-1/2">
                 <div className="rounded-2xl overflow-hidden shadow-xl aspect-video relative bg-gray-200">
                   <img 
-                    src="/images/map_overview.png" 
+                    src="/images/vigil_map_preview.png" 
                     alt={t('about.trip_2_title')}
                     className="w-full h-full object-cover"
                   />

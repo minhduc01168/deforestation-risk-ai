@@ -315,10 +315,10 @@ export default function LandingPage() {
             <h2 className="text-3xl md:text-5xl font-black mb-4" style={{ color: '#005e38' }}>
               {language === 'vi' ? 'KẾT NỐI VỚI VIGIL' : 'CONNECT WITH VIGIL'}
             </h2>
-            <p className="text-slate-500 text-base md:text-lg">
+            <p className="text-slate-500 text-base md:text-lg max-w-xl mx-auto" style={{ textWrap: 'balance' } as React.CSSProperties}>
               {language === 'vi'
                 ? 'Theo dõi các bài viết, chuyến khảo sát thực địa và kết quả nghiên cứu mới nhất của dự án VIGIL.'
-                : 'Follow news, field trip updates and research publications from the VIGIL project.'}
+                : 'Stay updated on our field expeditions, research findings, and latest news from the VIGIL project.'}
             </p>
           </div>
 
