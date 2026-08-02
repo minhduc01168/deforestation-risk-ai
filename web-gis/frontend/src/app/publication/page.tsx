@@ -77,7 +77,7 @@ export default function PublicationPage() {
     : sections.filter(s => s.id === selectedSection);
 
   const paperTitle = isVi
-    ? "Pipeline Học Máy Có Khả Năng Diễn Giải Cho Dự Báo Nguy Cơ Mất Rừng Tại Việt Nam Độ Phân Giải 1 km"
+    ? "Quy trình học máy diễn giải trong dự báo nguy cơ mất rừng ở độ phân giải 1 km² tại Việt Nam"
     : "An Interpretable Machine Learning Pipeline for Deforestation Risk Prediction in Vietnam at 1 km Resolution";
 
   const paperTags = isVi
@@ -100,7 +100,7 @@ export default function PublicationPage() {
             <FileText size={14} />
             <span>{isVi ? 'Công Bố Khoa Học' : 'Scientific Publication'}</span>
           </div>
-          <h1 className="text-3xl md:text-5xl font-extrabold mb-4 leading-snug tracking-normal" style={{ color: '#005e38' }}>
+          <h1 className="text-3xl md:text-5xl font-extrabold mb-4 leading-snug tracking-normal" style={{ color: '#005e38', textWrap: 'balance' } as React.CSSProperties}>
             {t('publication.hero_title')}
           </h1>
           <p className="text-base md:text-lg text-gray-600 max-w-2xl mx-auto mb-3" style={{ textWrap: 'balance' } as React.CSSProperties}>
@@ -130,8 +130,8 @@ export default function PublicationPage() {
               <span className="ml-auto text-sm font-bold text-gray-400">2025</span>
             </div>
 
-            {/* Paper Title — Refined font weight to extrabold + leading-snug for clean Vietnamese diacritics */}
-            <h2 className="text-xl md:text-2xl font-extrabold mb-3 leading-snug tracking-normal" style={{ color: '#005e38' }}>
+            {/* Paper Title — Refined translation & typography */}
+            <h2 className="text-xl md:text-2xl font-bold mb-3 leading-snug tracking-normal" style={{ color: '#005e38', textWrap: 'balance' } as React.CSSProperties}>
               {paperTitle}
             </h2>
 
