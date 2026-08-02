@@ -10,6 +10,16 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+
+  /* VIGIL Brand Palette */
+  --color-brand-green: #005e38;
+  --color-brand-green-dark: #004229;
+  --color-brand-green-light: #e8f5ee;
+  --color-brand-yellow: #F4D668;
+  --color-brand-yellow-light: #fdf8e1;
+  --color-brand-amber: #c98d26;
+  --color-brand-amber-light: #fef3e0;
+  --color-brand-offwhite: #f9fafb;
 }
 
 @media (prefers-color-scheme: dark) {

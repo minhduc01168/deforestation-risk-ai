@@ -11,29 +11,29 @@ export default function Header() {
   const { language, toggleLanguage, t } = useLanguage();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  // FIX #2: "Về VIGIL" moved before "Bản đồ VIGIL"
   const navItems = [
     { href: '/', label: t('nav.home') },
-    { href: '/map', label: t('nav.map') },
     { href: '/about', label: t('nav.about') },
+    { href: '/map', label: t('nav.map') },
     { href: '/publication', label: t('nav.publication') },
     { href: '/contact', label: t('nav.contact') },
   ];
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-gray-200 bg-white/95 backdrop-blur-md shadow-sm">
+    <header className="sticky top-0 z-50 w-full border-b border-white/10 shadow-md" style={{ backgroundColor: '#005e38' }}>
       <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-6">
-        {/* Brand Logo & Title */}
-        <Link href="/" className="flex items-center space-x-2.5 group">
-          <img 
-            src="/images/logo.png" 
-            alt="VIGIL" 
-            className="h-9 w-9 object-contain group-hover:scale-105 transition-transform" 
+        {/* Brand Logo — FIX #1: Larger logo (h-12), removed duplicate VIGIL text */}
+        <Link href="/" className="flex items-center group">
+          <img
+            src="/images/logo.png"
+            alt="VIGIL"
+            className="h-12 w-12 object-contain group-hover:scale-105 transition-transform drop-shadow-md"
           />
-          <span className="text-2xl font-black text-green-700 tracking-tight">VIGIL</span>
         </Link>
 
         {/* Desktop Navigation */}
-        <nav className="hidden md:flex items-center gap-1.5">
+        <nav className="hidden md:flex items-center gap-1">
           {navItems.map((item) => {
             const isActive = pathname === item.href;
             return (
@@ -42,8 +42,8 @@ export default function Header() {
                 href={item.href}
                 className={`px-3.5 py-1.5 rounded-lg text-sm font-semibold transition-all duration-200 ${
                   isActive
-                    ? 'bg-green-100 text-green-800 shadow-sm'
-                    : 'text-gray-600 hover:text-green-700 hover:bg-gray-100/80'
+                    ? 'bg-white/20 text-white shadow-sm'
+                    : 'text-white/80 hover:text-yellow-300 hover:bg-white/10'
                 }`}
               >
                 {item.label}
@@ -54,19 +54,19 @@ export default function Header() {
 
         {/* Right Actions */}
         <div className="flex items-center gap-3">
-          <div className="flex items-center rounded-lg border border-gray-300 bg-gray-100 p-0.5 shadow-sm">
-            <button 
+          <div className="flex items-center rounded-lg border border-white/30 bg-white/10 p-0.5 shadow-sm">
+            <button
               onClick={() => language !== 'vi' && toggleLanguage()}
               className={`px-2.5 py-1 text-xs font-extrabold rounded-md transition-all ${
-                language === 'vi' ? 'bg-white text-green-700 shadow-sm' : 'text-gray-500 hover:text-gray-900'
+                language === 'vi' ? 'bg-white text-[#005e38] shadow-sm' : 'text-white/70 hover:text-white'
               }`}
             >
               VI
             </button>
-            <button 
+            <button
               onClick={() => language !== 'en' && toggleLanguage()}
               className={`px-2.5 py-1 text-xs font-extrabold rounded-md transition-all ${
-                language === 'en' ? 'bg-white text-green-700 shadow-sm' : 'text-gray-500 hover:text-gray-900'
+                language === 'en' ? 'bg-white text-[#005e38] shadow-sm' : 'text-white/70 hover:text-white'
               }`}
             >
               EN
@@ -76,7 +76,7 @@ export default function Header() {
           {/* Mobile Menu Button */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden p-2 text-gray-600 hover:text-green-700 focus:outline-none"
+            className="md:hidden p-2 text-white hover:text-yellow-300 focus:outline-none"
             aria-label="Toggle Menu"
           >
             {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
@@ -86,7 +86,7 @@ export default function Header() {
 
       {/* Mobile Menu Dropdown */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-b border-gray-200 bg-white px-4 py-3 space-y-2 animate-fadeIn">
+        <div className="md:hidden border-t border-white/10 px-4 py-3 space-y-1 animate-fadeIn" style={{ backgroundColor: '#004229' }}>
           {navItems.map((item) => {
             const isActive = pathname === item.href;
             return (
@@ -96,8 +96,8 @@ export default function Header() {
                 onClick={() => setMobileMenuOpen(false)}
                 className={`block px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
                   isActive
-                    ? 'bg-green-100 text-green-800'
-                    : 'text-gray-600 hover:text-green-700 hover:bg-gray-50'
+                    ? 'bg-white/20 text-white'
+                    : 'text-white/80 hover:text-yellow-300 hover:bg-white/10'
                 }`}
               >
                 {item.label}
