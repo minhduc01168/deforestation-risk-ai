@@ -1,13 +1,10 @@
 "use client";
 
-import React, { useState } from 'react';
+import React from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { useLanguage } from '@/context/LanguageContext';
-import { ArrowRight, Map as MapIcon, ShieldCheck, Users, BookOpen, Heart, Sparkles, Trees, Camera, Globe, ScanLine } from 'lucide-react';
-import dynamic from 'next/dynamic';
-
-const InteractiveMap = dynamic(() => import('@/components/map/InteractiveMap'), { ssr: false });
+import { ArrowRight, Map as MapIcon, ShieldCheck, Users, BookOpen, Heart, Sparkles, Camera, Globe, ScanLine } from 'lucide-react';
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 40 },
@@ -31,19 +28,24 @@ export default function LandingPage() {
     // FIX #3: Light theme — bg-white base replacing dark bg-slate-950
     <div className="flex flex-col min-h-screen bg-white text-slate-800 font-sans selection:bg-[#F4D668] selection:text-[#005e38]">
 
-      {/* ─── Hero Section ─── */}
-      <section className="relative w-full min-h-[88vh] flex items-center justify-center overflow-hidden text-white pt-8 pb-16"
-        style={{ background: 'linear-gradient(135deg, #003d25 0%, #005e38 50%, #007a48 100%)' }}>
+      {/* ─── Hero Section — Full-bleed forest background ─── */}
+      <section className="relative w-full min-h-[92vh] flex items-center justify-center overflow-hidden text-white pt-8 pb-20">
 
-        {/* Ambient map background */}
-        <div className="absolute inset-0 opacity-20 mix-blend-luminosity">
-          <InteractiveMap />
-        </div>
-        {/* Decorative dot-grid overlay */}
-        <div className="absolute inset-0"
-          style={{ backgroundImage: 'radial-gradient(circle, rgba(244,214,104,0.12) 1px, transparent 1px)', backgroundSize: '32px 32px' }}
+        {/* Real forest background image */}
+        <div
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          style={{ backgroundImage: "url('/images/hero_forest_bg.png')" }}
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#005e38]/60 z-0" />
+
+        {/* Deep green cinematic overlay — inspired by runglang.vn */}
+        <div className="absolute inset-0" style={{
+          background: 'linear-gradient(180deg, rgba(0,30,15,0.55) 0%, rgba(0,60,30,0.45) 40%, rgba(0,40,20,0.80) 85%, rgba(0,20,10,0.95) 100%)'
+        }} />
+
+        {/* Subtle dot-grid tech overlay */}
+        <div className="absolute inset-0 opacity-30"
+          style={{ backgroundImage: 'radial-gradient(circle, rgba(244,214,104,0.18) 1px, transparent 1px)', backgroundSize: '36px 36px' }}
+        />
 
         <motion.div
           className="container mx-auto px-6 relative z-10 text-center max-w-4xl"

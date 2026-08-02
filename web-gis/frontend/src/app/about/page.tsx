@@ -26,23 +26,39 @@ export default function AboutPage() {
 
   return (
     <div className="flex flex-col min-h-screen pt-16">
-      {/* Hero Section */}
-      <section className="relative w-full h-[40vh] min-h-[300px] flex items-center justify-center bg-green-900 overflow-hidden">
-        {/* Placeholder image for hero background */}
-        <div 
-          className="absolute inset-0 bg-cover bg-center opacity-40 mix-blend-overlay"
-          style={{ backgroundImage: "url('/images/gialai_2026/thuc_dia_1.JPG')" }}
-        ></div>
-        <div className="absolute inset-0 bg-gradient-to-t from-gray-900 to-transparent opacity-80"></div>
-        <motion.div 
+      {/* Hero Section — Full-bleed forest interior background */}
+      <section className="relative w-full h-[55vh] min-h-[380px] flex items-center justify-center overflow-hidden">
+        {/* Full-bleed forest background */}
+        <div
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          style={{ backgroundImage: "url('/images/about_forest_bg.png')" }}
+        />
+
+        {/* Cinematic deep green overlay */}
+        <div className="absolute inset-0" style={{
+          background: 'linear-gradient(180deg, rgba(0,20,10,0.45) 0%, rgba(0,50,25,0.50) 40%, rgba(0,30,15,0.88) 90%, rgba(0,10,5,0.98) 100%)'
+        }} />
+
+        {/* Subtle light-ray effect from top */}
+        <div className="absolute inset-0 opacity-20"
+          style={{ background: 'radial-gradient(ellipse 60% 50% at 50% 0%, rgba(244,214,104,0.35) 0%, transparent 70%)' }}
+        />
+
+        <motion.div
           className="relative z-10 text-center px-4 max-w-4xl"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
+          transition={{ duration: 0.9 }}
         >
-          <h1 className="text-4xl md:text-5xl font-extrabold text-white mb-4 drop-shadow-md">
+          {/* Eco badge */}
+          <div className="inline-flex items-center gap-2 mb-5 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest border"
+            style={{ backgroundColor: 'rgba(244,214,104,0.15)', borderColor: 'rgba(244,214,104,0.5)', color: '#F4D668' }}>
+            🌿 VIGIL
+          </div>
+          <h1 className="text-4xl md:text-6xl font-black text-white mb-4 drop-shadow-2xl leading-tight">
             {t('about.hero_title')}
           </h1>
+          <div className="w-16 h-1 mx-auto rounded-full" style={{ backgroundColor: '#F4D668' }} />
         </motion.div>
       </section>
 
