@@ -18,7 +18,7 @@ export default function Footer() {
       <div className="container mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-4">
         <div className="mb-4 md:mb-0">
           <span className="text-xl font-bold text-green-700">VIGIL</span>
-          <p className="text-sm text-gray-500 mt-2 max-w-sm">
+          <p className="text-sm text-gray-500 mt-2 max-w-xs" style={{ textWrap: 'balance' } as React.CSSProperties}>
             {t('footer.description')}
           </p>
         </div>

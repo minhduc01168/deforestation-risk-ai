@@ -237,7 +237,7 @@ export default function LandingPage() {
               <span>{language === 'vi' ? 'Hình Ảnh Thực Địa 2025 - 2026' : 'Field Expeditions 2025 - 2026'}</span>
             </div>
             <h2 className="text-4xl font-black mb-4" style={{ color: '#005e38' }}>{t('landing.activities.title')}</h2>
-            <p className="text-slate-500 text-lg">
+            <p className="text-slate-500 text-lg max-w-2xl mx-auto" style={{ textWrap: 'balance' } as React.CSSProperties}>
               {t('landing.activities.desc')}
             </p>
           </motion.div>
