@@ -17,19 +17,16 @@ export default function Footer() {
   return (
     <footer className="border-t border-white/10 text-white/90 py-10 shadow-inner" style={{ backgroundColor: '#004229' }}>
       <div className="container mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
-        {/* Brand Logo & Subtitle — Logo VIGIL với khung nền trắng nổi bật */}
+        {/* Brand Logo & Subtitle — Logo VIGIL nổi bật phóng to */}
         <div className="flex flex-col items-center md:items-start text-center md:text-left">
-          <Link href="/" className="flex items-center gap-2.5 group mb-2">
-            <div className="bg-white p-1 rounded-xl shadow-md flex items-center justify-center h-10 w-10 border border-white/40 group-hover:scale-105 transition-transform flex-shrink-0">
+          <Link href="/" className="flex items-center group mb-2" aria-label="VIGIL - Trang chủ" title="VIGIL">
+            <div className="bg-white p-1 rounded-xl shadow-md flex items-center justify-center h-12 w-12 border border-white/40 group-hover:scale-105 transition-transform flex-shrink-0">
               <img
                 src="/images/logo.png"
                 alt="VIGIL Logo"
                 className="h-full w-full object-contain"
               />
             </div>
-            <span className="font-extrabold text-xl tracking-wider text-white">
-              VIGIL
-            </span>
           </Link>
           <p className="text-xs text-white/80 max-w-sm leading-relaxed" style={{ textWrap: 'balance' } as React.CSSProperties}>
             {t('footer.description')}

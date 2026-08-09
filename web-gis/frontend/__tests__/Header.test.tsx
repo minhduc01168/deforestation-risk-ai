@@ -11,7 +11,7 @@ describe('Header', () => {
       </LanguageProvider>
     );
     
-    expect(screen.getByText('VIGIL')).toBeInTheDocument();
+    expect(screen.getByAltText('VIGIL Logo')).toBeInTheDocument();
     expect(screen.getByText('Trang chủ')).toBeInTheDocument();
     expect(screen.getByText('Bản đồ VIGIL')).toBeInTheDocument();
     expect(screen.getByText('Về VIGIL')).toBeInTheDocument();

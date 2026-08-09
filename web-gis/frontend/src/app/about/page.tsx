@@ -59,13 +59,12 @@ export default function AboutPage() {
 
         <motion.div className="relative z-10 text-center px-6 max-w-4xl"
           initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9 }}>
-          {/* Badge VIGIL với logo nổi bật */}
-          <div className="inline-flex items-center gap-2 mb-5 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest border"
-            style={{ backgroundColor: 'rgba(244,214,104,0.15)', borderColor: 'rgba(244,214,104,0.5)', color: YELLOW }}>
-            <div className="bg-white p-0.5 rounded-md flex items-center justify-center h-5 w-5 flex-shrink-0">
+          {/* Badge VIGIL với logo nổi bật phóng to */}
+          <div className="inline-flex items-center mb-5 px-3 py-1 rounded-full border shadow-sm"
+            style={{ backgroundColor: 'rgba(244,214,104,0.15)', borderColor: 'rgba(244,214,104,0.5)' }}>
+            <div className="bg-white p-1 rounded-lg flex items-center justify-center h-8 w-8 flex-shrink-0 shadow-sm">
               <img src="/images/logo.png" alt="VIGIL Logo" className="h-full w-full object-contain" />
             </div>
-            <span>VIGIL</span>
           </div>
           {/* FIX: extrabold + tracking-normal + leading-snug for Vietnamese */}
           <h1 className="text-3xl md:text-5xl font-extrabold text-white mb-5 drop-shadow-2xl leading-snug tracking-normal">
