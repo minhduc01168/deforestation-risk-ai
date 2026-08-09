@@ -1,10 +1,10 @@
-# 🚀 Hướng Dẫn Build, Save Docker Image & Triển Khai (Deploy) Hệ Thống VIGIL Trên VPS Mới
+# 🚀 Hướng Dẫn Deploy Hệ Thống VIGIL Web-GIS Trên VPS (Domain: `www.vigil.green`)
 
-Tài liệu này hướng dẫn chi tiết từng bước đóng gói (build & export) các Docker Image của hệ thống **VIGIL Web-GIS (Frontend, Backend & PostGIS Database)**, triển khai lên máy chủ VPS mới, cấu hình **Cloudflare DNS/SSL** và **Nginx Reverse Proxy** với tên miền chính thức: **`www.vigil.green`** (và `vigil.green`).
+Tài liệu này hướng dẫn chi tiết từng bước đóng gói, triển khai (deploy), cấu hình **Cloudflare DNS/SSL** và **Nginx Reverse Proxy** cho hệ thống **VIGIL Web-GIS (Frontend, Backend & PostGIS Database)** với tên miền chính thức: **`www.vigil.green`** (và `vigil.green`).
 
 ---
 
-## 📋 Danh Sách Dịch Vụ Cần Đóng Gói (Architecture Overview)
+## 📋 Architecture Overview
 
 Hệ thống VIGIL bao gồm 3 dịch vụ chính:
 1. **Frontend:** App Next.js 16 (Port `3000`) -> Image: `web-gis-frontend:latest`
@@ -13,9 +13,9 @@ Hệ thống VIGIL bao gồm 3 dịch vụ chính:
 
 ---
 
-## 🛠️ PHẦN 1: Triển Khai Trực Tiếp Trên VPS Mới (Khuyên Dùng)
+## 🛠️ PHẦN 1: Triển Khai Trực Tiếp Trên VPS (Khuyên Dùng)
 
-Nếu bạn đã clone/copy thư mục mã nguồn `deforestation-risk-ai` lên VPS, bạn chỉ cần di chuyển vào thư mục `web-gis` và khởi chạy trực tiếp:
+Nếu bạn đã clone/copy mã nguồn `deforestation-risk-ai` lên VPS, bạn chỉ cần di chuyển vào thư mục `web-gis` và khởi chạy trực tiếp:
 
 ```bash
 cd ~/deforestation-risk-ai/web-gis
@@ -26,9 +26,7 @@ docker compose up -d --build
 
 ---
 
-## 📦 PHẦN 2: Triển Khai Theo Cách Load File Image `.tar.gz` (Offline Deploy)
-
-Nếu bạn thực hiện đóng gói tại máy local rồi chuyển file `.tar.gz` lên VPS:
+## 📦 PHẦN 2: Triển Khai Bằng File Nén Image `.tar.gz` (Offline Deploy)
 
 ### Bước 2.1: Đóng gói tại máy Local
 ```bash
@@ -46,50 +44,100 @@ docker save postgis/postgis:15-3.3 | gzip > ./docker-images/postgis-db.tar.gz
 
 ### Bước 2.2: Copy lên VPS & Load Images
 ```bash
-# Trên VPS, di chuyển vào thư mục chứa dự án:
+# Đảm bảo bạn chuyển vào đúng thư mục web-gis chứa folder docker-images
 cd ~/deforestation-risk-ai/web-gis
 
-# Bung nạp các Docker image
+# Nạp các Docker image
 gunzip -c ./docker-images/web-gis-frontend.tar.gz | docker load
 gunzip -c ./docker-images/web-gis-backend.tar.gz | docker load
 gunzip -c ./docker-images/postgis-db.tar.gz | docker load
+```
 
-# Khởi chạy các container
-docker compose up -d
+### Bước 2.3: Tạo tệp `docker-compose.prod.yml` trên VPS
+```bash
+cat << 'EOF' > docker-compose.prod.yml
+services:
+  db:
+    image: postgis/postgis:15-3.3
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgrespassword_prod_secure
+      POSTGRES_DB: gialai_forest
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_prod_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d gialai_forest"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    image: web-gis-backend:latest
+    restart: always
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgrespassword_prod_secure@db:5432/gialai_forest
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - backend_prod_uploads:/app/uploads
+
+  frontend:
+    image: web-gis-frontend:latest
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=https://www.vigil.green
+    depends_on:
+      - backend
+
+volumes:
+  postgres_prod_data:
+  backend_prod_uploads:
+EOF
+
+# Khởi chạy các container bằng file prod:
+docker compose -f docker-compose.prod.yml up -d
 ```
 
 ---
 
-## 🌐 PHẦN 3: Cấu Hình Cloudflare (DNS & SSL/TLS) Cho Tên Miền `www.vigil.green`
+## 🌐 PHẦN 3: Cấu Hình Cloudflare (DNS & SSL/TLS)
 
-### Bước 3.1: Thêm bản ghi DNS trên Cloudflare Dashboard
-1. Đăng nhập vào **Cloudflare Dashboard** -> Chọn domain `vigil.green`.
-2. Vào mục **DNS** -> **Records** -> Chọn **Add record**:
+### Bước 3.1: Thêm bản ghi DNS
+1. Đăng nhập **Cloudflare Dashboard** -> Chọn domain `vigil.green`.
+2. Vào mục **DNS** -> **Records** -> Nhấn **Add record**:
    - **Bản ghi 1 (Root Domain):**
      - `Type`: `A`
-     - `Name`: `@` (hoặc `vigil.green`)
-     - `IPv4 address`: Địa chỉ IP công khai của VPS (VD: `170.79.x.x`)
+     - `Name`: `@`
+     - `IPv4 address`: IP công khai của VPS (VD: `170.79.x.x`)
      - `Proxy status`: Bật **Proxied** 🟠 (Đám mây màu cam)
-   - **Bản ghi 2 (WWW Subdomain):**
+   - **Bản ghi 2 (Subdomain www):**
      - `Type`: `CNAME`
      - `Name`: `www`
-     - `Target`: `@` (hoặc `vigil.green`)
+     - `Target`: `@`
      - `Proxy status`: Bật **Proxied** 🟠
 
-### Bước 3.2: Cấu hình mã hóa SSL/TLS trên Cloudflare
-1. Đáo tới mục **SSL/TLS** -> **Overview** trên menu Cloudflare.
-2. Đổi chế độ sang **Full** (hoặc **Full (strict)** nếu đã cài SSL Certificate ở VPS).
-   > ⚠️ *Lưu ý: Không dùng chế độ **Flexible** để tránh bị lỗi lặp chuyển hướng 301 (Too Many Redirects).*
+### Bước 3.2: Cấu hình mã hóa SSL/TLS Tránh Lỗi Redirect Loop
+1. Vào **SSL/TLS** -> **Overview** trên Cloudflare.
+2. Đổi chế độ sang **Full** (hoặc **Full (strict)**).
+   > ⚠️ *TUYỆT ĐỐI KHÔNG chọn **Flexible** để tránh lỗi 301 Too Many Redirects.*
 
 ---
 
 ## 🔒 PHẦN 4: Cấu Hình Nginx Reverse Proxy Trên VPS
 
-Nginx sẽ nhận request từ Cloudflare (Port 80/443) và điều hướng nội bộ:
-- Cổng `3000` -> App Next.js Frontend
+Nginx sẽ nhận kết nối từ Cloudflare (Port 80/443) và điều hướng nội bộ:
+- Cổng `3000` -> Next.js Frontend
 - Cổng `8000` -> FastAPI Backend (`/api/`)
 
-### Bước 4.1: Cài đặt Nginx trên VPS
+### Bước 4.1: Cài đặt Nginx
 ```bash
 apt update && apt install -y nginx
 ```
@@ -104,7 +152,7 @@ server {
     access_log /var/log/nginx/vigil_access.log;
     error_log /var/log/nginx/vigil_error.log;
 
-    # 1. Điều hướng cho Next.js Frontend (Port 3000)
+    # 1. Điều hướng Frontend Next.js (Port 3000)
     location / {
         proxy_pass http://127.0.0.1:3000;
         proxy_http_version 1.1;
@@ -117,7 +165,7 @@ server {
         proxy_cache_bypass $http_upgrade;
     }
 
-    # 2. Điều hướng cho FastAPI Backend (Port 8000)
+    # 2. Điều hướng FastAPI Backend (Port 8000)
     location /api/ {
         proxy_pass http://127.0.0.1:8000/api/;
         proxy_http_version 1.1;
@@ -133,54 +181,34 @@ server {
 EOF
 ```
 
-### Bước 4.3: Kích hoạt tệp cấu hình & Khởi động lại Nginx
+### Bước 4.3: Xử lý xung đột cổng 80 & Bật Nginx
+
+Nếu gặp lỗi cổng 80 bị chiếm bởi Apache2 hoặc Traefik (`n8n-traefik-1`):
+
 ```bash
-# Tạo liên kết kích hoạt site
+# 1. Tắt Apache2 (nếu có):
+systemctl stop apache2 && systemctl disable apache2
+
+# 2. Tắt Traefik container (nếu có):
+docker stop n8n-traefik-1 && docker update --restart=no n8n-traefik-1
+
+# 3. Kích hoạt site Nginx & Khởi động service:
 ln -sf /etc/nginx/sites-available/vigil /etc/nginx/sites-enabled/
-
-# Xóa site mặc định (nếu có)
 rm -f /etc/nginx/sites-enabled/default
-
-# Kiểm tra cú pháp cấu hình
 nginx -t
-
-# Nạp lại Nginx
-systemctl reload nginx
+systemctl enable --now nginx
+systemctl status nginx
 ```
 
 ---
 
-## ⚙️ PHẦN 5: Cập Nhật Cấu Hình Biến Môi Trường `docker-compose.yml`
-
-Trong tệp `web-gis/docker-compose.yml`, cập nhật biến môi trường Frontend để kết nối API qua HTTPS domain chính thức:
-
-```yaml
-  frontend:
-    build:
-      context: ./frontend
-    ports:
-      - "3000:3000"
-    environment:
-      - NEXT_PUBLIC_API_URL=https://www.vigil.green
-    depends_on:
-      - backend
-```
-
-Khởi động lại container sau khi cập nhật:
-```bash
-cd ~/deforestation-risk-ai/web-gis
-docker compose up -d --build frontend
-```
-
----
-
-## 📊 PHẦN 6: Các Lệnh Quản Trị Thường Dùng Trên VPS
+## 📊 PHẦN 5: Các Lệnh Quản Trị Thường Dùng Trên VPS
 
 | Thao tác | Lệnh thực hiện |
 | :--- | :--- |
-| **Xem log thời gian thực** | `docker compose logs -f` |
-| **Khởi động lại dịch vụ** | `docker compose restart` |
-| **Dừng ứng dụng** | `docker compose down` |
-| **Kiểm tra trạng thái Nginx** | `systemctl status nginx` |
+| **Nạp lại Nginx** | `systemctl reload nginx` |
+| **Xem log Nginx** | `tail -f /var/log/nginx/vigil_access.log` |
+| **Xem log Docker** | `cd ~/deforestation-risk-ai/web-gis && docker compose logs -f` |
+| **Khởi động lại Docker** | `cd ~/deforestation-risk-ai/web-gis && docker compose restart` |
 | **Sao lưu Database** | `docker exec -t web-gis-db-1 pg_dump -U postgres gialai_forest > backup.sql` |
 | **Khôi phục Database** | `cat backup.sql \| docker exec -i web-gis-db-1 psql -U postgres gialai_forest` |
