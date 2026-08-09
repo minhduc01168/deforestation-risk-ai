@@ -95,7 +95,7 @@ export default function LandingPage() {
               className="w-full sm:w-auto inline-flex items-center justify-center space-x-2 bg-white/10 hover:bg-white/20 text-white border border-white/40 font-bold text-base px-7 py-4 rounded-full shadow-lg backdrop-blur-md transition-all hover:-translate-y-1"
             >
               <BookOpen size={18} />
-              <span>{language === 'vi' ? 'Tìm Hiểu Dự Án' : 'Learn About Project'}</span>
+              <span>{language === 'vi' ? 'Tìm hiểu dự án' : 'Learn About Project'}</span>
             </Link>
           </motion.div>
         </motion.div>

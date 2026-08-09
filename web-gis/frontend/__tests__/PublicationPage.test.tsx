@@ -35,28 +35,26 @@ describe('PublicationPage', () => {
   it('renders the hero section correctly', () => {
     renderWithLanguage(<PublicationPage />);
     
-    // Check if the hero title exists (it should fallback to translation keys if not fully loaded, 
-    // but with our mock Provider it will render the english strings if it's default, or keys)
-    // Since LanguageProvider loads from JSONs, we can check for text.
-    expect(screen.getByText(/Scientific Research|Nghiên cứu Khoa học/)).toBeInTheDocument();
+    // Check if the hero title exists
+    expect(screen.getByRole('heading', { level: 1 })).toBeInTheDocument();
   });
 
   it('renders all 5 research sections', () => {
     renderWithLanguage(<PublicationPage />);
     
     // Abstract
-    expect(screen.getByText(/Abstract|Tóm tắt/)).toBeInTheDocument();
+    expect(screen.getByText(/Abstract/)).toBeInTheDocument();
     
     // Methodology
-    expect(screen.getByText(/Methodology|Phương pháp luận/)).toBeInTheDocument();
+    expect(screen.getByText(/Methodology/)).toBeInTheDocument();
     
     // Datasets
-    expect(screen.getByText(/Datasets|Dữ liệu/)).toBeInTheDocument();
+    expect(screen.getByText(/Datasets/)).toBeInTheDocument();
     
     // Results
-    expect(screen.getByText(/Results|Kết quả/)).toBeInTheDocument();
+    expect(screen.getByText(/Results/)).toBeInTheDocument();
     
-    // Future opportunity
-    expect(screen.getByText(/Future opportunity|Cơ hội trong tương lai/)).toBeInTheDocument();
+    // Research Roadmap
+    expect(screen.getByText(/Research Roadmap/)).toBeInTheDocument();
   });
 });

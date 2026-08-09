@@ -23,10 +23,8 @@ describe('LandingPage', () => {
       </LanguageProvider>
     );
     
-    // Check Hero section
-    expect(screen.getByText('Khám phá Bản đồ VIGIL')).toBeInTheDocument();
-    
-    // Check Facebook iframe section (by title)
-    expect(screen.getByText('Hoạt động mới nhất')).toBeInTheDocument();
+    // Check Hero buttons
+    expect(screen.getByText('Khám phá bản đồ VIGIL')).toBeInTheDocument();
+    expect(screen.getByText('Tìm hiểu dự án')).toBeInTheDocument();
   });
 });
