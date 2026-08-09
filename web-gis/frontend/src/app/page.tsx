@@ -23,6 +23,7 @@ const staggerContainer = {
 
 export default function LandingPage() {
   const { t, language } = useLanguage();
+  const isVi = language === 'vi';
 
   return (
     // FIX #3: Light theme — bg-white base replacing dark bg-slate-950
@@ -53,34 +54,30 @@ export default function LandingPage() {
           animate="visible"
           variants={staggerContainer}
         >
-          {/* FIX #4: Badge text updated */}
-          <motion.div variants={fadeInUp} className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full mb-8 border border-[#F4D668]/50 shadow-inner backdrop-blur-md"
+          {/* Tagline UPPERCASE mới theo Feedback 02 */}
+          <motion.div variants={fadeInUp} className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full mb-6 border border-[#F4D668]/50 shadow-inner backdrop-blur-md"
             style={{ backgroundColor: 'rgba(244,214,104,0.15)' }}>
             <Sparkles size={15} className="text-[#F4D668] animate-pulse" />
-            <span className="text-xs font-bold uppercase tracking-widest text-[#F4D668]">
-              {language === 'vi'
-                ? 'Dự án ứng dụng AI cảnh báo sớm tình trạng mất rừng tại Việt Nam'
-                : 'AI-Powered Early Warning for Forest Loss in Vietnam'}
+            <span className="text-xs font-black uppercase tracking-widest text-[#F4D668]">
+              {t('landing.tagline')}
             </span>
           </motion.div>
 
-          {/* FIX #4: Only "VIGIL" — slogan removed */}
+          {/* Hero Title VIGIL */}
           <motion.h1
             variants={fadeInUp}
-            className="text-8xl md:text-9xl font-black mb-6 tracking-tight leading-none text-white drop-shadow-2xl"
+            className="text-7xl md:text-9xl font-black mb-6 tracking-tight leading-none text-white drop-shadow-2xl"
           >
-            VIGIL
+            {t('landing.hero.title')}
           </motion.h1>
 
-          {/* FIX #4: Description balanced — no orphan word */}
+          {/* Hero Subtitle song ngữ mới theo Feedback 03 */}
           <motion.p
             variants={fadeInUp}
-            className="text-base md:text-xl text-white/85 mb-10 max-w-2xl mx-auto font-normal leading-relaxed"
+            className="text-base md:text-xl text-white/90 mb-10 max-w-3xl mx-auto font-normal leading-relaxed"
             style={{ textWrap: 'balance' } as React.CSSProperties}
           >
-            {language === 'vi'
-              ? 'Ứng dụng phân tích ảnh vệ tinh tiên tiến và học máy AI để khoanh vùng rủi ro mất rừng tại Gia Lai, hỗ trợ bảo vệ những cánh rừng tự nhiên.'
-              : 'Applying satellite remote sensing and AI machine learning to monitor forest loss risks in Gia Lai, protecting natural ecosystems.'}
+            {t('landing.hero.subtitle')}
           </motion.p>
 
           <motion.div variants={fadeInUp} className="flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -104,11 +101,11 @@ export default function LandingPage() {
         </motion.div>
       </section>
 
-      {/* ─── FIX #5: Feature Stat Cards — with full explanatory description ─── */}
+      {/* ─── 3 Nhóm Hoạt động Chính theo Feedback 04 ─── */}
       <section className="relative z-20 -mt-10 container mx-auto px-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
 
-          {/* Card 1: 1km² Grid */}
+          {/* Group 1: AI Risk Map */}
           <div className="bg-white border border-[#005e38]/15 p-7 rounded-3xl shadow-xl flex flex-col gap-4 hover:shadow-2xl hover:border-[#005e38]/40 hover:-translate-y-1 transition-all group">
             <div className="flex items-center gap-4">
               <div className="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-md transition-colors group-hover:scale-105"
@@ -117,63 +114,57 @@ export default function LandingPage() {
               </div>
               <div>
                 <div className="text-xl font-black tracking-tight" style={{ color: '#005e38' }}>
-                  {language === 'vi' ? 'Chi Tiết Đến 1 km²' : 'Detailed to 1 km²'}
+                  {t('landing.activities.group1_title')}
                 </div>
                 <div className="text-xs font-bold uppercase tracking-wider text-slate-400 mt-0.5">
-                  {language === 'vi' ? 'Lưới Giám Sát AI' : 'AI Monitoring Grid'}
+                  {t('landing.activities.group1_subtitle')}
                 </div>
               </div>
             </div>
             <p className="text-sm text-slate-600 leading-relaxed">
-              {language === 'vi'
-                ? 'Hệ thống chia nhỏ toàn bộ diện tích rừng thành các ô lưới 1×1 km. AI phân tích từng ô để phát hiện biến động tán cây, định vị chính xác điểm nóng mất rừng mà không bỏ sót.'
-                : 'The system divides the entire forest area into 1×1 km grid cells. AI analyzes each cell to detect canopy changes and pinpoint deforestation hotspots with precision.'}
+              {t('landing.activities.group1_desc')}
             </p>
           </div>
 
-          {/* Card 2: 10% Priority Risk */}
+          {/* Group 2: Community Network */}
           <div className="bg-white border border-[#c98d26]/20 p-7 rounded-3xl shadow-xl flex flex-col gap-4 hover:shadow-2xl hover:border-[#c98d26]/50 hover:-translate-y-1 transition-all group">
             <div className="flex items-center gap-4">
               <div className="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-md transition-colors group-hover:scale-105"
                 style={{ backgroundColor: '#fef3e0', color: '#c98d26' }}>
-                <ShieldCheck size={28} />
+                <Users size={28} />
               </div>
               <div>
                 <div className="text-xl font-black tracking-tight" style={{ color: '#c98d26' }}>
-                  {language === 'vi' ? '10% Khu Vực Ưu Tiên' : '10% Priority Areas'}
+                  {t('landing.activities.group2_title')}
                 </div>
                 <div className="text-xs font-bold uppercase tracking-wider text-slate-400 mt-0.5">
-                  {language === 'vi' ? 'Cảnh Báo Sớm Nguy Cơ Cao' : 'High-Risk Early Warning'}
+                  {t('landing.activities.group2_subtitle')}
                 </div>
               </div>
             </div>
             <p className="text-sm text-slate-600 leading-relaxed">
-              {language === 'vi'
-                ? 'Thuật toán AI tự động sàng lọc và khoanh vùng 10% diện tích rừng có nguy cơ mất rừng cao nhất. Đây là danh sách ưu tiên để lực lượng kiểm lâm tập trung tuần tra và ứng phó nhanh.'
-                : 'AI automatically filters and zones the top 10% of forest area with the highest loss risk — a priority list for rangers to focus patrols and respond quickly.'}
+              {t('landing.activities.group2_desc')}
             </p>
           </div>
 
-          {/* Card 3: Community Field Reports */}
+          {/* Group 3: Media & Awareness */}
           <div className="bg-white border border-[#005e38]/15 p-7 rounded-3xl shadow-xl flex flex-col gap-4 hover:shadow-2xl hover:border-[#005e38]/40 hover:-translate-y-1 transition-all group">
             <div className="flex items-center gap-4">
               <div className="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-md transition-colors group-hover:scale-105"
                 style={{ backgroundColor: '#e8f5ee', color: '#005e38' }}>
-                <Users size={28} />
+                <Globe size={28} />
               </div>
               <div>
                 <div className="text-xl font-black tracking-tight" style={{ color: '#005e38' }}>
-                  {language === 'vi' ? 'Báo Cáo Thực Địa' : 'Field Reports'}
+                  {t('landing.activities.group3_title')}
                 </div>
                 <div className="text-xs font-bold uppercase tracking-wider text-slate-400 mt-0.5">
-                  {language === 'vi' ? 'Cộng Đồng Xác Minh' : 'Community Verification'}
+                  {t('landing.activities.group3_subtitle')}
                 </div>
               </div>
             </div>
             <p className="text-sm text-slate-600 leading-relaxed">
-              {language === 'vi'
-                ? 'Kiểm lâm và người dân có thể gửi ảnh thực địa và báo cáo trực tiếp trên bản đồ. Dữ liệu này giúp xác minh cảnh báo từ vệ tinh và liên tục cải thiện độ chính xác của mô hình AI.'
-                : 'Rangers and citizens can submit field photos and reports directly on the map — verifying satellite alerts and continuously improving AI model accuracy.'}
+              {t('landing.activities.group3_desc')}
             </p>
           </div>
         </div>
@@ -191,21 +182,19 @@ export default function LandingPage() {
                 <span>{language === 'vi' ? 'Hành Động Cùng VIGIL' : 'Action With VIGIL'}</span>
               </div>
               <h2 className="text-3xl md:text-5xl font-black text-white leading-tight">
-                {language === 'vi' ? 'BẢO VỆ ĐẠI NGÀN GIA LAI' : 'PROTECT GIA LAI FORESTS'}
+                {t('landing.cta_section.title')}
               </h2>
-              <p className="text-white/80 text-base md:text-lg leading-relaxed">
-                {language === 'vi'
-                  ? 'Chung tay cùng lực lượng kiểm lâm và cộng đồng địa phương gửi báo cáo thực địa kèm hình ảnh trực tiếp trên bản đồ GIS.'
-                  : 'Join rangers and local communities by submitting field reports directly on the GIS map.'}
+              <p className="text-white/90 text-base md:text-lg leading-relaxed">
+                {t('landing.cta_section.subtitle')}
               </p>
             </div>
 
             <div className="flex-shrink-0 text-center bg-white/10 backdrop-blur-md p-6 rounded-2xl border border-white/20 shadow-xl min-w-[280px]">
               <div className="text-xl font-bold text-white mb-2">
-                {language === 'vi' ? 'Gửi Báo Cáo Thực Địa' : 'Submit Field Report'}
+                {t('landing.cta_section.title')}
               </div>
-              <p className="text-xs text-white/60 mb-5">
-                {language === 'vi' ? 'Định vị GPS & Tải ảnh thực địa' : 'GPS location & photo upload'}
+              <p className="text-xs text-white/70 mb-5">
+                {isVi ? 'Định vị GPS & Tải ảnh thực địa' : 'GPS location & field photo upload'}
               </p>
 
               <Link
@@ -214,7 +203,7 @@ export default function LandingPage() {
                 style={{ backgroundColor: '#F4D668' }}
               >
                 <MapIcon size={18} />
-                <span>{language === 'vi' ? 'Mở Bản Đồ & Báo Cáo' : 'Open Map & Report'}</span>
+                <span>{t('landing.cta_section.btn')}</span>
               </Link>
             </div>
           </div>

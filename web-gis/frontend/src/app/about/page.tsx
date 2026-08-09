@@ -59,10 +59,13 @@ export default function AboutPage() {
 
         <motion.div className="relative z-10 text-center px-6 max-w-4xl"
           initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9 }}>
-          {/* Badge */}
+          {/* Badge VIGIL với logo nổi bật */}
           <div className="inline-flex items-center gap-2 mb-5 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest border"
             style={{ backgroundColor: 'rgba(244,214,104,0.15)', borderColor: 'rgba(244,214,104,0.5)', color: YELLOW }}>
-            🌿 VIGIL
+            <div className="bg-white p-0.5 rounded-md flex items-center justify-center h-5 w-5 flex-shrink-0">
+              <img src="/images/logo.png" alt="VIGIL Logo" className="h-full w-full object-contain" />
+            </div>
+            <span>VIGIL</span>
           </div>
           {/* FIX: extrabold + tracking-normal + leading-snug for Vietnamese */}
           <h1 className="text-3xl md:text-5xl font-extrabold text-white mb-5 drop-shadow-2xl leading-snug tracking-normal">
@@ -92,16 +95,46 @@ export default function AboutPage() {
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-start">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-start mb-16">
             <motion.div variants={fadeInUp} className="space-y-5 text-gray-600 text-base md:text-lg leading-relaxed">
               <p>{t('about.brand_story_p1')}</p>
               <p>{t('about.brand_story_p2')}</p>
             </motion.div>
             <motion.div variants={fadeInUp} className="space-y-5 text-gray-600 text-base md:text-lg leading-relaxed">
               <p>{t('about.brand_story_p3')}</p>
-              <p>{t('about.brand_story_p4')}</p>
             </motion.div>
           </div>
+
+          {/* ─── Vision & Mission Section (Feedback 02) ─── */}
+          <motion.div variants={fadeInUp} className="grid grid-cols-1 md:grid-cols-2 gap-8 my-12">
+            {/* Vision */}
+            <div className="bg-[#e8f5ee]/60 border border-[#005e38]/20 p-8 rounded-3xl shadow-md relative overflow-hidden">
+              <div className="w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-xl mb-4"
+                style={{ backgroundColor: GREEN, color: '#white' }}>
+                👁️
+              </div>
+              <h3 className="text-2xl font-bold mb-3" style={{ color: GREEN }}>
+                {t('about.vision_title')}
+              </h3>
+              <p className="text-gray-700 text-base leading-relaxed">
+                {t('about.vision_desc')}
+              </p>
+            </div>
+
+            {/* Mission */}
+            <div className="bg-[#fef3e0]/70 border border-[#c98d26]/30 p-8 rounded-3xl shadow-md relative overflow-hidden">
+              <div className="w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-xl mb-4"
+                style={{ backgroundColor: AMBER, color: 'white' }}>
+                🚀
+              </div>
+              <h3 className="text-2xl font-bold mb-3" style={{ color: AMBER }}>
+                {t('about.mission_title')}
+              </h3>
+              <p className="text-gray-700 text-base leading-relaxed">
+                {t('about.mission_desc')}
+              </p>
+            </div>
+          </motion.div>
         </motion.div>
       </section>
 
@@ -125,32 +158,42 @@ export default function AboutPage() {
           </motion.div>
 
           <div className="space-y-20">
-            {trips.map(({ key, image, reverse }) => (
-              <motion.div key={key} variants={fadeInUp}
-                className={`flex flex-col ${reverse ? 'md:flex-row-reverse' : 'md:flex-row'} gap-10 items-center`}>
-                {/* Image */}
-                <div className="w-full md:w-1/2">
-                  <div className="rounded-2xl overflow-hidden shadow-xl aspect-video relative border"
-                    style={{ borderColor: 'rgba(0,94,56,0.15)' }}>
-                    <img src={image} alt={t(`about.${key}_title`)}
-                      className="w-full h-full object-cover hover:scale-105 transition-transform duration-500" />
+            {trips.map(({ key, image, reverse }) => {
+              const displayImg = key === 'trip_1' ? '/images/IMG_1431 (edited).jpg' : image;
+              return (
+                <motion.div key={key} variants={fadeInUp}
+                  className={`flex flex-col ${reverse ? 'md:flex-row-reverse' : 'md:flex-row'} gap-10 items-center`}>
+                  {/* Image */}
+                  <div className="w-full md:w-1/2">
+                    <div className="rounded-2xl overflow-hidden shadow-xl aspect-video relative border bg-gray-100"
+                      style={{ borderColor: 'rgba(0,94,56,0.15)' }}>
+                      <img
+                        src={displayImg}
+                        alt={t(`about.${key}_title`)}
+                        onError={(e) => {
+                          // Fallback to existing image if IMG_1431 (edited).jpg is not found
+                          (e.currentTarget as HTMLImageElement).src = image;
+                        }}
+                        className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
+                      />
+                    </div>
                   </div>
-                </div>
-                {/* Text */}
-                <div className="w-full md:w-1/2 space-y-4">
-                  {/* Yellow accent bar + title — unified */}
-                  <div className="flex items-center gap-3">
-                    <div className="w-1 h-10 rounded-full flex-shrink-0" style={{ backgroundColor: YELLOW }} />
-                    <h3 className="text-2xl font-bold" style={{ color: GREEN }}>
-                      {t(`about.${key}_title`)}
-                    </h3>
+                  {/* Text */}
+                  <div className="w-full md:w-1/2 space-y-4">
+                    {/* Yellow accent bar + title — unified */}
+                    <div className="flex items-center gap-3">
+                      <div className="w-1 h-10 rounded-full flex-shrink-0" style={{ backgroundColor: YELLOW }} />
+                      <h3 className="text-2xl font-bold" style={{ color: GREEN }}>
+                        {t(`about.${key}_title`)}
+                      </h3>
+                    </div>
+                    <p className="text-gray-600 text-base md:text-lg leading-relaxed">
+                      {t(`about.${key}_desc`)}
+                    </p>
                   </div>
-                  <p className="text-gray-600 text-base md:text-lg leading-relaxed">
-                    {t(`about.${key}_desc`)}
-                  </p>
-                </div>
-              </motion.div>
-            ))}
+                </motion.div>
+              );
+            })}
           </div>
         </motion.div>
       </section>
