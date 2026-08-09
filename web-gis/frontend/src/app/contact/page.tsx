@@ -6,7 +6,7 @@ import { useLanguage } from '@/context/LanguageContext';
 import { Mail, Globe, MessageCircle, CheckCircle2 } from 'lucide-react';
 
 export default function ContactPage() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [status, setStatus] = useState<'idle' | 'loading' | 'success'>('idle');
   const [formData, setFormData] = useState({
     name: '',
@@ -119,18 +119,28 @@ export default function ContactPage() {
                   </div>
                   <div>
                     <h3 className="font-medium text-gray-900 text-lg">Facebook</h3>
-                    <a href="https://www.facebook.com/share/18yn8UxqPE/?mibextid=wwXIfr" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline text-base font-medium break-all">
-                      https://www.facebook.com/share/18yn8UxqPE/?mibextid=wwXIfr
+                    <a
+                      href="https://www.facebook.com/share/18yn8UxqPE/?mibextid=wwXIfr"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:underline text-base font-bold inline-flex items-center gap-1"
+                    >
+                      <span>FB/VIGIL</span>
+                      <span className="text-xs">↗</span>
                     </a>
                   </div>
                 </div>
               </div>
             </div>
             
-            {/* Map Placeholder or additional info could go here */}
-            <div className="bg-[#1E3A2B] rounded-2xl p-8 text-white text-center flex flex-col justify-center min-h-[200px]">
-               <h3 className="text-xl font-bold mb-2">VIGIL Project</h3>
-               <p className="text-green-100 opacity-80">Technology for Life</p>
+            {/* VIGIL Project Box — Clarified purpose according to Contact Feedback 03 */}
+            <div className="bg-[#1E3A2B] rounded-2xl p-8 text-white text-center flex flex-col justify-center min-h-[180px] shadow-md border border-[#2C5E3B]">
+               <h3 className="text-2xl font-black mb-2 uppercase tracking-wider text-[#F4D668]">
+                 {t('contact.project_box_title')}
+               </h3>
+               <p className="text-white/90 text-sm font-medium leading-relaxed max-w-sm mx-auto">
+                 {t('contact.project_box_subtitle')}
+               </p>
             </div>
           </motion.div>
 
@@ -143,21 +153,38 @@ export default function ContactPage() {
               visible: { opacity: 1, x: 0, transition: { duration: 0.6, delay: 0.4 } }
             }}
           >
-            <div className="bg-white rounded-2xl p-8 md:p-10 shadow-sm border border-gray-100 h-full">
+            <div className="bg-white rounded-2xl p-8 md:p-10 shadow-sm border border-gray-100 h-full flex flex-col">
               <h2 className="text-2xl font-bold text-[#2C5E3B] mb-6">
                 {t('contact.form_title')}
               </h2>
               
               {status === 'success' ? (
                 <motion.div 
-                  initial={{ opacity: 0, scale: 0.9 }}
+                  initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  className="bg-green-50 border border-green-200 rounded-xl p-8 text-center h-full flex flex-col items-center justify-center"
+                  className="bg-[#e8f5ee]/80 border border-[#005e38]/20 rounded-2xl p-8 text-center my-auto flex flex-col items-center justify-center space-y-4 shadow-sm"
                 >
-                  <CheckCircle2 className="text-green-500 w-16 h-16 mb-4" />
-                  <h3 className="text-xl font-medium text-green-800 mb-2">
+                  <div className="w-16 h-16 rounded-full bg-[#005e38] text-white flex items-center justify-center shadow-lg">
+                    <CheckCircle2 size={36} />
+                  </div>
+                  <h3 className="text-xl font-bold text-[#005e38] mt-2">
                     {t('contact.success_message')}
                   </h3>
+                  <p className="text-sm text-gray-600 max-w-sm leading-relaxed">
+                    {language === 'vi' 
+                      ? 'Cảm ơn bạn đã gửi đóng góp. Đội ngũ VIGIL sẽ xem xét và phản hồi trong thời gian sớm nhất.'
+                      : 'Thank you for your message. The VIGIL team will review and respond as soon as possible.'}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setStatus('idle');
+                      setFormData({ name: '', email: '', organization: '', message: '' });
+                    }}
+                    className="mt-4 px-6 py-2.5 rounded-xl font-bold text-sm bg-[#005e38] text-white hover:bg-[#004229] active:scale-[0.98] transition-all shadow-md"
+                  >
+                    {language === 'vi' ? 'Gửi tin nhắn khác' : 'Send another message'}
+                  </button>
                 </motion.div>
               ) : (
                 <form onSubmit={handleSubmit} className="space-y-5">
