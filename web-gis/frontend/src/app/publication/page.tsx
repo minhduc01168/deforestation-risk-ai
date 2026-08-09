@@ -174,10 +174,10 @@ export default function PublicationPage() {
   ];
 
   return (
-    <div className="flex flex-col min-h-screen pt-16 bg-white text-slate-800 font-sans">
+    <div className="flex flex-col min-h-screen pt-16 bg-white text-slate-800 font-sans overflow-x-hidden">
 
       {/* ── Hero — Forest background (giống About page) ── */}
-      <section className="relative w-full h-[50vh] min-h-[360px] flex items-center justify-center overflow-hidden">
+      <section className="relative w-full flex items-center justify-center overflow-hidden py-16 md:py-20" style={{ minHeight: '420px', isolation: 'isolate' }}>
         <div className="absolute inset-0 bg-cover bg-center bg-no-repeat"
           style={{ backgroundImage: "url('/images/hero_forest_bg.png')" }} />
         <div className="absolute inset-0" style={{
@@ -187,12 +187,14 @@ export default function PublicationPage() {
         <div className="absolute inset-0 opacity-20"
           style={{ background: `radial-gradient(ellipse 60% 50% at 50% 0%, rgba(244,214,104,0.35) 0%, transparent 70%)` }} />
 
-        <motion.div className="relative z-10 text-center px-6 max-w-3xl"
+        <motion.div className="relative z-10 w-full text-center px-6" style={{ maxWidth: '720px', margin: '0 auto' }}
           initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9 }}>
           {/* VIGIL Logo Badge */}
-          <div className="inline-flex items-center mb-5 px-4 py-2 rounded-2xl border shadow-lg backdrop-blur-md"
-            style={{ backgroundColor: 'rgba(255,255,255,0.95)', borderColor: 'rgba(244,214,104,0.6)', boxShadow: '0 0 20px rgba(244,214,104,0.35)' }}>
-            <img src="/images/logo_cropped.png" alt="VIGIL Logo" className="h-8 md:h-10 w-auto object-contain drop-shadow-sm" />
+          <div className="flex justify-center mb-5">
+            <div className="inline-flex items-center px-4 py-2 rounded-2xl border shadow-lg backdrop-blur-md"
+              style={{ backgroundColor: 'rgba(255,255,255,0.95)', borderColor: 'rgba(244,214,104,0.6)', boxShadow: '0 0 20px rgba(244,214,104,0.35)' }}>
+              <img src="/images/logo_cropped.png" alt="VIGIL Logo" className="h-8 md:h-10 w-auto object-contain drop-shadow-sm" />
+            </div>
           </div>
 
           <div className="font-mono text-xs tracking-[0.15em] uppercase mb-4 font-bold" style={{ color: YELLOW }}>
@@ -201,19 +203,25 @@ export default function PublicationPage() {
           <h1 className="text-3xl md:text-5xl font-extrabold text-white mb-4 leading-snug tracking-normal drop-shadow-2xl">
             {tx.heroTitle}
           </h1>
-          <p className="text-white/75 text-base md:text-lg max-w-[520px] mx-auto leading-relaxed">
+          <p className="text-white/75 text-base md:text-lg leading-relaxed" style={{ maxWidth: '520px', margin: '0 auto' }}>
             {tx.heroSub}
           </p>
 
           {/* Stats Row */}
-          <div className="flex justify-center max-w-[420px] mx-auto rounded-xl overflow-hidden border mt-8 shadow-lg"
-            style={{ borderColor: 'rgba(244,214,104,0.4)', backgroundColor: 'rgba(0,40,20,0.6)', backdropFilter: 'blur(8px)' }}>
+          <div className="flex mt-8 rounded-xl overflow-hidden border shadow-lg"
+            style={{
+              maxWidth: '420px',
+              margin: '2rem auto 0',
+              borderColor: 'rgba(244,214,104,0.4)',
+              backgroundColor: 'rgba(0,40,20,0.6)',
+              backdropFilter: 'blur(8px)'
+            }}>
             {[
               { val: '1', label: tx.statPub },
               { val: 'Q1', label: tx.statRank },
               { val: '2+', label: tx.statPipeline },
             ].map((s, i) => (
-              <div key={i} className={`flex-1 p-4 text-center ${i < 2 ? 'border-r border-white/20' : ''}`}>
+              <div key={i} className="flex-1 p-4 text-center" style={i < 2 ? { borderRight: '1px solid rgba(255,255,255,0.2)' } : {}}>
                 <div className="text-2xl md:text-3xl font-extrabold leading-none mb-1" style={{ color: YELLOW }}>{s.val}</div>
                 <div className="font-mono text-[10px] text-white/60 tracking-[0.08em] uppercase font-semibold">{s.label}</div>
               </div>
@@ -223,7 +231,7 @@ export default function PublicationPage() {
       </section>
 
       {/* ── Main Content — White background ── */}
-      <div className="flex-1 bg-white">
+      <div className="flex-1 bg-white overflow-hidden">
 
         {/* Publications Section */}
         <section className="max-w-[900px] mx-auto px-6 py-16">
