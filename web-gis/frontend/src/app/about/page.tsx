@@ -44,7 +44,7 @@ export default function AboutPage() {
   ];
 
   return (
-    <div className="flex flex-col min-h-screen pt-16 bg-white">
+    <div className="flex flex-col min-h-screen bg-white">
 
       {/* ─── Hero — Full-bleed forest background ─── */}
       <section className="relative w-full h-[55vh] min-h-[380px] flex items-center justify-center overflow-hidden">

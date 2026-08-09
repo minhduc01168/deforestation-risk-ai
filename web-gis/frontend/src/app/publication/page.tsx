@@ -174,7 +174,7 @@ export default function PublicationPage() {
   ];
 
   return (
-    <div className="flex flex-col min-h-screen pt-16 bg-white text-slate-800 font-sans overflow-x-hidden">
+    <div className="flex flex-col min-h-screen bg-white text-slate-800 font-sans overflow-x-hidden">
 
       {/* ── Hero — Forest background (giống About page) ── */}
       <section className="relative w-full flex items-center justify-center overflow-hidden py-16 md:py-20" style={{ minHeight: '420px', isolation: 'isolate' }}>
