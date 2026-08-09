@@ -23,13 +23,13 @@ export default function Header() {
   return (
     <header className="sticky top-0 z-50 w-full border-b border-white/10 shadow-md" style={{ backgroundColor: '#005e38' }}>
       <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-6">
-        {/* Brand Logo — Logo VIGIL nổi bật phóng to */}
+        {/* Brand Logo — Logo VIGIL nổi bật với hiệu ứng Glassmorphism & Ambient Glow */}
         <Link href="/" className="flex items-center group" aria-label="VIGIL - Trang chủ" title="VIGIL">
-          <div className="bg-white p-1 rounded-xl shadow-md flex items-center justify-center h-12 w-12 border border-white/40 group-hover:scale-105 transition-transform flex-shrink-0">
+          <div className="bg-white/95 backdrop-blur-md px-3.5 py-1.5 rounded-xl shadow-md border border-white/60 group-hover:scale-105 group-hover:shadow-[0_0_22px_rgba(244,214,104,0.5)] group-hover:border-yellow-300/80 transition-all duration-300 flex items-center justify-center">
             <img
-              src="/images/logo.png"
+              src="/images/logo_cropped.png"
               alt="VIGIL Logo"
-              className="h-full w-full object-contain"
+              className="h-8 md:h-9 w-auto object-contain drop-shadow-sm"
             />
           </div>
         </Link>
