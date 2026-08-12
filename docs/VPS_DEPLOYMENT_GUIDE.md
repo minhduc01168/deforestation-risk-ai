@@ -38,16 +38,19 @@ cd ~/deforestation-risk-ai/web-gis
 # ⚠️ QUAN TRỌNG: Phải build frontend với --build-arg để bake đúng API URL vào bundle.
 # Không thể dùng "docker compose up --build" trực tiếp vì compose dev không truyền build-arg production.
 
-# Bước 1: Build frontend image với production API URL
+# 1. Build Frontend Image (có truyền API URL production)
 docker build \
   --build-arg NEXT_PUBLIC_API_URL=https://www.vigil.green \
   -t web-gis-frontend:latest \
   ./frontend
 
-# Bước 2: Build backend image
+# 2. Build Backend Image
 docker build -t web-gis-backend:latest ./backend
 
-# Bước 3: Khởi chạy tất cả dịch vụ bằng file prod
+# 3. Pull Database Image (PostGIS) từ Docker Hub về máy
+docker pull postgis/postgis:15-3.3
+
+# Bước 4: Khởi chạy tất cả dịch vụ bằng file prod
 docker compose -f docker-compose.prod.yml up -d
 ```
 
@@ -63,16 +66,19 @@ docker compose -f docker-compose.prod.yml up -d
 ```bash
 cd /path/to/deforestation-risk-ai/web-gis
 
-# 1. Build frontend image với đúng production API URL (bắt buộc)
+# 1. Build Frontend Image (có truyền API URL production)
 docker build \
   --build-arg NEXT_PUBLIC_API_URL=https://www.vigil.green \
   -t web-gis-frontend:latest \
   ./frontend
 
-# 2. Build backend image
+# 2. Build Backend Image
 docker build -t web-gis-backend:latest ./backend
 
-# 3. Xuất và nén ra thư mục docker-images
+# 3. Pull Database Image (PostGIS) từ Docker Hub về máy
+docker pull postgis/postgis:15-3.3
+
+# 4. Xuất và nén ra thư mục docker-images
 mkdir -p ./docker-images
 docker save web-gis-frontend:latest | gzip > ./docker-images/web-gis-frontend.tar.gz
 docker save web-gis-backend:latest | gzip > ./docker-images/web-gis-backend.tar.gz
@@ -80,6 +86,13 @@ docker save postgis/postgis:15-3.3 | gzip > ./docker-images/postgis-db.tar.gz
 ```
 
 ### Bước 2.2: Copy lên VPS & Load Images
+
+**Chuyển thư mục `docker-images` lên VPS bằng lệnh `scp`:**
+```bash
+scp -r /home/mypc/deforestation-risk-ai/web-gis/docker-images root@187.127.103.153:/root/deforestation-risk-ai/web-gis/
+```
+
+**Thực hiện load images trên VPS:**
 ```bash
 # Đảm bảo bạn chuyển vào đúng thư mục web-gis chứa folder docker-images
 cd ~/deforestation-risk-ai/web-gis
