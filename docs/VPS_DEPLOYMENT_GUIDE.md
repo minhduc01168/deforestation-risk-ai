@@ -13,15 +13,42 @@ Hệ thống VIGIL bao gồm 3 dịch vụ chính:
 
 ---
 
+> [!IMPORTANT]
+> **Về biến `NEXT_PUBLIC_API_URL` — Đọc trước khi build!**
+>
+> Next.js nhúng các biến `NEXT_PUBLIC_*` vào JS bundle **lúc build** (không phải runtime).
+> Vì vậy **KHÔNG thể** set bằng `environment:` trong docker-compose — sẽ không có tác dụng.
+>
+> **Cách đúng:** Truyền qua `--build-arg` khi `docker build`:
+> ```bash
+> docker build --build-arg NEXT_PUBLIC_API_URL=https://www.vigil.green \
+>   -t web-gis-frontend:latest ./frontend
+> ```
+> Dockerfile đã có giá trị mặc định `https://www.vigil.green`, nên nếu không truyền `--build-arg` thì vẫn dùng đúng URL production.
+
+---
+
 ## 🛠️ PHẦN 1: Triển Khai Trực Tiếp Trên VPS (Khuyên Dùng)
 
-Nếu bạn đã clone/copy mã nguồn `deforestation-risk-ai` lên VPS, bạn chỉ cần di chuyển vào thư mục `web-gis` và khởi chạy trực tiếp:
+Nếu bạn đã clone/copy mã nguồn `deforestation-risk-ai` lên VPS:
 
 ```bash
 cd ~/deforestation-risk-ai/web-gis
 
-# Biên dịch và khởi chạy tất cả dịch vụ ở chế độ background
-docker compose up -d --build
+# ⚠️ QUAN TRỌNG: Phải build frontend với --build-arg để bake đúng API URL vào bundle.
+# Không thể dùng "docker compose up --build" trực tiếp vì compose dev không truyền build-arg production.
+
+# Bước 1: Build frontend image với production API URL
+docker build \
+  --build-arg NEXT_PUBLIC_API_URL=https://www.vigil.green \
+  -t web-gis-frontend:latest \
+  ./frontend
+
+# Bước 2: Build backend image
+docker build -t web-gis-backend:latest ./backend
+
+# Bước 3: Khởi chạy tất cả dịch vụ bằng file prod
+docker compose -f docker-compose.prod.yml up -d
 ```
 
 ---
@@ -29,13 +56,23 @@ docker compose up -d --build
 ## 📦 PHẦN 2: Triển Khai Bằng File Nén Image `.tar.gz` (Offline Deploy)
 
 ### Bước 2.1: Đóng gói tại máy Local
+
+> [!WARNING]
+> Phải build frontend với `--build-arg` production URL trước khi đóng gói. Không dùng `docker compose build` thông thường vì sẽ build với `http://localhost:8000`.
+
 ```bash
 cd /path/to/deforestation-risk-ai/web-gis
 
-# 1. Build images
-docker compose build --no-cache
+# 1. Build frontend image với đúng production API URL (bắt buộc)
+docker build \
+  --build-arg NEXT_PUBLIC_API_URL=https://www.vigil.green \
+  -t web-gis-frontend:latest \
+  ./frontend
 
-# 2. Xuất và nén ra thư mục docker-images
+# 2. Build backend image
+docker build -t web-gis-backend:latest ./backend
+
+# 3. Xuất và nén ra thư mục docker-images
 mkdir -p ./docker-images
 docker save web-gis-frontend:latest | gzip > ./docker-images/web-gis-frontend.tar.gz
 docker save web-gis-backend:latest | gzip > ./docker-images/web-gis-backend.tar.gz
@@ -54,6 +91,7 @@ gunzip -c ./docker-images/postgis-db.tar.gz | docker load
 ```
 
 ### Bước 2.3: Tạo tệp `docker-compose.prod.yml` trên VPS
+
 ```bash
 cat << 'EOF' > docker-compose.prod.yml
 services:
@@ -92,8 +130,11 @@ services:
     restart: always
     ports:
       - "3000:3000"
-    environment:
-      - NEXT_PUBLIC_API_URL=https://www.vigil.green
+    # LƯU Ý: NEXT_PUBLIC_API_URL được bake vào JS bundle lúc "docker build",
+    # không phải lúc runtime. Dòng environment bên dưới KHÔNG có tác dụng với Next.js.
+    # URL đã được nhúng sẵn vào image khi build với --build-arg (xem Phần 1/2.1).
+    # environment:
+    #   - NEXT_PUBLIC_API_URL=https://www.vigil.green  # <- vô hiệu, chỉ để tham khảo
     depends_on:
       - backend
 
@@ -136,6 +177,7 @@ docker compose -f docker-compose.prod.yml up -d
 Nginx sẽ nhận kết nối từ Cloudflare (Port 80/443) và điều hướng nội bộ:
 - Cổng `3000` -> Next.js Frontend
 - Cổng `8000` -> FastAPI Backend (`/api/`)
+- Cổng `8000` -> Thư mục uploads ảnh thực địa (`/uploads/`)
 
 ### Bước 4.1: Cài đặt Nginx
 ```bash
@@ -143,6 +185,10 @@ apt update && apt install -y nginx
 ```
 
 ### Bước 4.2: Tạo tệp cấu hình Nginx
+
+> [!IMPORTANT]
+> **Bắt buộc phải có block `location /uploads/`** để ảnh báo cáo thực địa hiển thị được trong admin dashboard. Thiếu block này, ảnh sẽ bị lỗi 404 và hiện chữ "⚠️ Không tải được ảnh".
+
 ```bash
 cat << 'EOF' > /etc/nginx/sites-available/vigil
 server {
@@ -152,20 +198,7 @@ server {
     access_log /var/log/nginx/vigil_access.log;
     error_log /var/log/nginx/vigil_error.log;
 
-    # 1. Điều hướng Frontend Next.js (Port 3000)
-    location / {
-        proxy_pass http://127.0.0.1:3000;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection 'upgrade';
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_cache_bypass $http_upgrade;
-    }
-
-    # 2. Điều hướng FastAPI Backend (Port 8000)
+    # 1. Điều hướng FastAPI Backend API (Port 8000) — phải đứng trước location /
     location /api/ {
         proxy_pass http://127.0.0.1:8000/api/;
         proxy_http_version 1.1;
@@ -176,6 +209,30 @@ server {
 
         # Giới hạn dung lượng tải ảnh/báo cáo thực địa
         client_max_body_size 50M;
+    }
+
+    # 2. Điều hướng thư mục uploads (ảnh báo cáo thực địa) — QUAN TRỌNG
+    #    Thiếu block này -> ảnh trong admin dashboard sẽ không load được
+    location /uploads/ {
+        proxy_pass http://127.0.0.1:8000/uploads/;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # 3. Điều hướng Frontend Next.js (Port 3000) — đứng sau /api/ và /uploads/
+    location / {
+        proxy_pass http://127.0.0.1:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_cache_bypass $http_upgrade;
     }
 }
 EOF
@@ -202,13 +259,50 @@ systemctl status nginx
 
 ---
 
-## 📊 PHẦN 5: Các Lệnh Quản Trị Thường Dùng Trên VPS
+## ✅ PHẦN 5: Kiểm Tra Sau Deploy
+
+Sau khi deploy, kiểm tra từng hạng mục sau:
+
+```bash
+# 1. Kiểm tra backend API hoạt động
+curl -X POST https://www.vigil.green/api/auth/login \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "username=admin&password=Admin%40123"
+# Kết quả mong đợi: {"access_token": "...", "token_type": "bearer"}
+
+# 2. Kiểm tra endpoint reports (không cần auth)
+curl https://www.vigil.green/api/reports
+# Kết quả mong đợi: [...] (mảng JSON)
+
+# 3. Kiểm tra uploads accessible
+curl -I https://www.vigil.green/uploads/
+# Kết quả mong đợi: HTTP/1.1 200 hoặc 404 (nhưng không phải 502)
+
+# 4. Xem log nếu có lỗi
+docker compose -f docker-compose.prod.yml logs -f frontend
+docker compose -f docker-compose.prod.yml logs -f backend
+```
+
+| Hạng mục | Cách kiểm tra | Kết quả mong đợi |
+|----------|---------------|------------------|
+| Frontend | Truy cập `https://www.vigil.green` | Trang chủ VIGIL hiển thị |
+| Admin login | `/admin` → nhập `admin` / `Admin@123` | Đăng nhập thành công |
+| Báo cáo thực địa | Bản đồ → click → gửi ảnh | Không yêu cầu đăng nhập, gửi OK |
+| Ảnh admin | Admin → xem báo cáo → click chi tiết | Ảnh hiển thị (không phải "⚠️ Không tải được") |
+| OG tags | [opengraph.xyz](https://www.opengraph.xyz) → nhập URL | Preview VIGIL hiển thị đúng |
+| Mobile map | DevTools → iPhone SE → trang bản đồ | Nút "Bộ lọc" toggle sidebar hiện trên mobile |
+
+---
+
+## 📊 PHẦN 6: Các Lệnh Quản Trị Thường Dùng Trên VPS
 
 | Thao tác | Lệnh thực hiện |
 | :--- | :--- |
 | **Nạp lại Nginx** | `systemctl reload nginx` |
 | **Xem log Nginx** | `tail -f /var/log/nginx/vigil_access.log` |
-| **Xem log Docker** | `cd ~/deforestation-risk-ai/web-gis && docker compose logs -f` |
-| **Khởi động lại Docker** | `cd ~/deforestation-risk-ai/web-gis && docker compose restart` |
+| **Xem log Docker** | `docker compose -f docker-compose.prod.yml logs -f` |
+| **Khởi động lại Docker** | `docker compose -f docker-compose.prod.yml restart` |
 | **Sao lưu Database** | `docker exec -t web-gis-db-1 pg_dump -U postgres gialai_forest > backup.sql` |
 | **Khôi phục Database** | `cat backup.sql \| docker exec -i web-gis-db-1 psql -U postgres gialai_forest` |
+| **Rebuild frontend (sau update code)** | `docker build --build-arg NEXT_PUBLIC_API_URL=https://www.vigil.green -t web-gis-frontend:latest ./frontend && docker compose -f docker-compose.prod.yml up -d --no-deps frontend` |
+| **Rebuild backend (sau update code)** | `docker build -t web-gis-backend:latest ./backend && docker compose -f docker-compose.prod.yml up -d --no-deps backend` |

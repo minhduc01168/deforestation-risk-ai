@@ -50,6 +50,7 @@ app.add_middleware(
 UPLOAD_DIR = "uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
+app.mount("/api/uploads", StaticFiles(directory=UPLOAD_DIR), name="api_uploads")
 
 def hash_ip(ip: str) -> str:
     # Use a secret salt in production
@@ -144,8 +145,8 @@ async def create_report(
         with open(filepath, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
         
-        # URL for frontend to access
-        image_url = f"/uploads/{filename}"
+        # URL for frontend to access (served via /api/uploads route)
+        image_url = f"/api/uploads/{filename}"
 
     # Create PostGIS point (Lon, Lat is standard for EWKT)
     pt_wkt = f"POINT({lon} {lat})"

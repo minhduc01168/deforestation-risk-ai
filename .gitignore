@@ -15,3 +15,5 @@ _bmad-output/
 docs-paper/
 participation_evidence/
 web-gis/frontend/node_modules/
+web-gis/docker-images/
+*.tar.gz

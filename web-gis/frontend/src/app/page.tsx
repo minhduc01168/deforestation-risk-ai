@@ -1,10 +1,10 @@
 "use client";
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '@/context/LanguageContext';
-import { ArrowRight, Map as MapIcon, ShieldCheck, Users, BookOpen, Heart, Sparkles, Camera, Globe, ScanLine } from 'lucide-react';
+import { ArrowRight, Map as MapIcon, ShieldCheck, Users, BookOpen, Heart, Sparkles, Camera, Globe, ScanLine, X as XIcon, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 40 },
@@ -24,6 +24,24 @@ const staggerContainer = {
 export default function LandingPage() {
   const { t, language } = useLanguage();
   const isVi = language === 'vi';
+
+  // Lightbox state
+  const [lightbox, setLightbox] = useState<{ src: string; label: string; all: {src: string; label: string}[]; index: number } | null>(null);
+
+  const openLightbox = (all: {src: string; label: string}[], index: number) => {
+    setLightbox({ src: all[index].src, label: all[index].label, all, index });
+  };
+  const closeLightbox = () => setLightbox(null);
+  const prevImage = () => {
+    if (!lightbox) return;
+    const newIndex = (lightbox.index - 1 + lightbox.all.length) % lightbox.all.length;
+    setLightbox({ ...lightbox, src: lightbox.all[newIndex].src, label: lightbox.all[newIndex].label, index: newIndex });
+  };
+  const nextImage = () => {
+    if (!lightbox) return;
+    const newIndex = (lightbox.index + 1) % lightbox.all.length;
+    setLightbox({ ...lightbox, src: lightbox.all[newIndex].src, label: lightbox.all[newIndex].label, index: newIndex });
+  };
 
   return (
     // FIX #3: Light theme — bg-white base replacing dark bg-slate-950
@@ -250,14 +268,24 @@ export default function LandingPage() {
                   { src: '/images/gialai_2026/thuc_dia_3.JPG', alt: 'Gia Lai Field 3', label: language === 'vi' ? 'Khảo sát điểm mất rừng thực địa' : 'Field Deforestation Inspection' },
                   { src: '/images/gialai_2026/thuc_dia_6.JPG', alt: 'Gia Lai Field 6', label: language === 'vi' ? 'Đối chiếu dữ liệu tại Mang Yang' : 'Mang Yang Field Data Verification' },
                   { src: '/images/gialai_2026/thuc_dia_8.JPG', alt: 'Gia Lai Field 8', label: language === 'vi' ? 'Làm việc cùng kiểm lâm địa phương' : 'Ranger & Field Team Collaboration' },
-                ].map((img) => (
-                  <div key={img.alt} className="relative rounded-2xl overflow-hidden group h-44">
-                    <img src={img.src} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt={img.alt} />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#003d25] via-[#005e38]/40 to-transparent opacity-80 group-hover:opacity-90 transition-opacity flex items-end p-3 text-xs text-white font-semibold leading-snug">
-                      {img.label}
-                    </div>
-                  </div>
-                ))}
+                 ].map((img, idx, arr) => (
+                   <div
+                     key={img.alt}
+                     className="relative rounded-2xl overflow-hidden group h-44 cursor-pointer"
+                     onClick={() => openLightbox(arr.map(i => ({ src: i.src, label: i.label })), idx)}
+                   >
+                     <img src={img.src} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt={img.alt} />
+                     <div className="absolute inset-0 bg-gradient-to-t from-[#003d25] via-[#005e38]/40 to-transparent opacity-80 group-hover:opacity-90 transition-opacity flex items-end p-3 text-xs text-white font-semibold leading-snug">
+                       {img.label}
+                     </div>
+                     {/* View icon overlay on hover */}
+                     <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                       <div className="bg-black/40 backdrop-blur-sm rounded-full p-2">
+                         <Camera size={18} className="text-white" />
+                       </div>
+                     </div>
+                   </div>
+                 ))}
               </div>
             </div>
 
@@ -278,11 +306,21 @@ export default function LandingPage() {
                   { src: '/images/ninhbinh_2025/nb_2.jpg', alt: 'Ninh Binh Field 2', label: language === 'vi' ? 'Khảo sát thảm thực vật & độ che phủ' : 'Vegetation & Canopy Cover Audit' },
                   { src: '/images/ninhbinh_2025/nb_3.jpg', alt: 'Ninh Binh Field 3', label: language === 'vi' ? 'Thu thập mẫu đối chứng chỉ số thực vật' : 'Vegetation Index Field Calibration' },
                   { src: '/images/ninhbinh_2025/nb_4.jpg', alt: 'Ninh Binh Field 4', label: language === 'vi' ? 'Đội ngũ nghiên cứu VIGIL tại thực địa' : 'VIGIL Research Team Fieldwork' },
-                ].map((img) => (
-                  <div key={img.alt} className="relative rounded-2xl overflow-hidden group h-44">
+                ].map((img, idx, arr) => (
+                  <div
+                    key={img.alt}
+                    className="relative rounded-2xl overflow-hidden group h-44 cursor-pointer"
+                    onClick={() => openLightbox(arr.map(i => ({ src: i.src, label: i.label })), idx)}
+                  >
                     <img src={img.src} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt={img.alt} />
                     <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/30 to-transparent opacity-80 group-hover:opacity-90 transition-opacity flex items-end p-3 text-xs text-white font-semibold leading-snug">
                       {img.label}
+                    </div>
+                    {/* View icon overlay on hover */}
+                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="bg-black/40 backdrop-blur-sm rounded-full p-2">
+                        <Camera size={18} className="text-white" />
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -398,6 +436,73 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+
+      {/* ─── Lightbox Modal ─── */}
+      <AnimatePresence>
+        {lightbox && (
+          <motion.div
+            key="lightbox"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
+            style={{ backgroundColor: 'rgba(0,0,0,0.92)' }}
+            onClick={closeLightbox}
+          >
+            {/* Close button */}
+            <button
+              onClick={closeLightbox}
+              className="absolute top-4 right-4 bg-white/10 hover:bg-white/20 backdrop-blur-md text-white rounded-full p-2 z-10 transition-colors"
+            >
+              <XIcon size={22} />
+            </button>
+
+            {/* Prev button */}
+            {lightbox.all.length > 1 && (
+              <button
+                onClick={(e) => { e.stopPropagation(); prevImage(); }}
+                className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/20 backdrop-blur-md text-white rounded-full p-3 z-10 transition-colors"
+              >
+                <ChevronLeft size={24} />
+              </button>
+            )}
+
+            {/* Image */}
+            <motion.div
+              key={lightbox.src}
+              initial={{ scale: 0.92, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.92, opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              onClick={(e) => e.stopPropagation()}
+              className="relative max-w-4xl max-h-[85vh] w-full flex flex-col items-center"
+            >
+              <img
+                src={lightbox.src}
+                alt={lightbox.label}
+                className="max-h-[75vh] max-w-full object-contain rounded-2xl shadow-2xl"
+              />
+              <div className="mt-4 text-center">
+                <p className="text-white font-semibold text-sm px-4">{lightbox.label}</p>
+                {lightbox.all.length > 1 && (
+                  <p className="text-white/50 text-xs mt-1">{lightbox.index + 1} / {lightbox.all.length}</p>
+                )}
+              </div>
+            </motion.div>
+
+            {/* Next button */}
+            {lightbox.all.length > 1 && (
+              <button
+                onClick={(e) => { e.stopPropagation(); nextImage(); }}
+                className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/20 backdrop-blur-md text-white rounded-full p-3 z-10 transition-colors"
+              >
+                <ChevronRight size={24} />
+              </button>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
     </div>
   );

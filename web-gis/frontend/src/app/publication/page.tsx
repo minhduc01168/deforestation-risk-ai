@@ -683,39 +683,9 @@ export default function PublicationPage() {
           </div>
         </section>
 
-        {/* Open Science */}
-        <section className="max-w-[900px] mx-auto px-6 pb-24">
-          <div className="font-mono text-[10px] tracking-[0.15em] uppercase mb-4 flex items-center gap-3 font-bold" style={{ color: GREEN }}>
-            <span>{tx.sectionOpenSci}</span>
-            <div className="flex-1 h-[1px]" style={{ backgroundColor: `${GREEN}30` }} />
-          </div>
 
-          <p className="text-slate-600 text-sm mb-6 max-w-[500px]">{tx.openSciDesc}</p>
+      {/* Open Science section removed */}
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {[
-              { icon: '🐙', title: tx.codeTitle, desc: tx.codeDesc, btn: tx.codeBtn },
-              { icon: '📦', title: tx.dataTitle, desc: tx.dataDesc, btn: tx.dataBtn },
-            ].map((card) => (
-              <div key={card.title} className="bg-white border border-slate-200 hover:border-slate-300 rounded-2xl p-6 transition-all shadow-sm hover:shadow-md">
-                <div className="w-9 h-9 rounded-lg flex items-center justify-center text-lg mb-4"
-                  style={{ backgroundColor: `${GREEN}15` }}>
-                  {card.icon}
-                </div>
-                <div className="text-base font-semibold text-slate-800 mb-1">{card.title}</div>
-                <div className="text-xs text-slate-500 mb-4">{card.desc}</div>
-                <a href="https://github.com/Borino88/deforestation-risk-vietnam"
-                  target="_blank" rel="noopener noreferrer"
-                  className="w-full inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-md text-xs font-bold border transition-colors"
-                  style={{ color: GREEN, borderColor: `${GREEN}50`, backgroundColor: 'transparent' }}
-                  onMouseEnter={e => { e.currentTarget.style.backgroundColor = `${GREEN}10`; e.currentTarget.style.borderColor = GREEN; }}
-                  onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.borderColor = `${GREEN}50`; }}>
-                  {card.btn}
-                </a>
-              </div>
-            ))}
-          </div>
-        </section>
       </div>
 
       {/* Toast */}

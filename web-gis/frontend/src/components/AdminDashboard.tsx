@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { MapPin, Navigation, Clock, MessageSquare, Image as ImageIcon, Search, X } from 'lucide-react';
+import { MapPin, Navigation, Clock, MessageSquare, Image as ImageIcon, Search, X, ZoomIn, ExternalLink } from 'lucide-react';
 
 interface Report {
   id: number;
@@ -35,6 +35,7 @@ export default function AdminDashboard({
   const [contacts, setContacts] = useState<ContactMessageItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedReport, setSelectedReport] = useState<Report | null>(null);
+  const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
 
   const t = {
     vi: {
@@ -134,6 +135,32 @@ export default function AdminDashboard({
     window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}`, '_blank');
   };
 
+  // Helper: resolve image URL — handles relative paths, full URLs, and transforms /uploads/ to /api/uploads/
+  const getImageUrl = (imageUrl: string | null): string | null => {
+    if (!imageUrl) return null;
+    let path = imageUrl;
+    
+    // If it's a full URL that points to /uploads/ without /api/, transform it
+    if (path.startsWith('http://') || path.startsWith('https://')) {
+      if (path.includes('/uploads/') && !path.includes('/api/uploads/')) {
+        return path.replace('/uploads/', '/api/uploads/');
+      }
+      return path;
+    }
+
+    // Ensure relative paths use /api/uploads/
+    if (!path.startsWith('/api/')) {
+      if (path.startsWith('/uploads/')) {
+        path = `/api${path}`;
+      } else {
+        path = `/api/uploads/${path.replace(/^\//, '')}`;
+      }
+    }
+
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+    return `${apiUrl}${path}`;
+  };
+
   return (
     <div className="w-full max-w-5xl mx-auto space-y-6 pb-20">
       <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-slate-700 pb-4 gap-4">
@@ -178,12 +205,20 @@ export default function AdminDashboard({
               >
                 {/* Thumbnail */}
                 {report.image_url ? (
-                  <div className="w-full md:w-32 h-32 md:h-24 flex-shrink-0 overflow-hidden rounded-lg bg-slate-900 border border-slate-600">
+                  <div 
+                    className="w-full md:w-32 h-32 md:h-24 flex-shrink-0 overflow-hidden rounded-lg bg-slate-900 border border-slate-600 cursor-pointer relative group"
+                    onClick={() => setSelectedReport(report)}
+                    title={language === 'vi' ? 'Nhấn để xem chi tiết' : 'Click to view details'}
+                  >
                     <img 
-                      src={(process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000') + report.image_url} 
+                      src={getImageUrl(report.image_url)!} 
                       alt="Evidence Thumbnail" 
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover transition-opacity group-hover:opacity-70"
+                      onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
                     />
+                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                      <ZoomIn size={24} className="text-white drop-shadow-lg" />
+                    </div>
                   </div>
                 ) : (
                   <div className="w-full md:w-32 h-32 md:h-24 flex-shrink-0 flex flex-col items-center justify-center rounded-lg bg-slate-900 border border-slate-600 text-slate-600">
@@ -292,12 +327,26 @@ export default function AdminDashboard({
             {/* Modal Body */}
             <div className="p-4 md:p-6 flex flex-col gap-6 overflow-y-auto max-h-[70vh]">
               {selectedReport.image_url ? (
-                <div className="w-full rounded-xl overflow-hidden border border-slate-700 bg-black flex justify-center max-h-[50vh]">
+                <div className="w-full rounded-xl overflow-hidden border border-slate-700 bg-black flex justify-center max-h-[50vh] relative group">
                   <img 
-                    src={(process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000') + selectedReport.image_url} 
+                    src={getImageUrl(selectedReport.image_url)!} 
                     alt="Evidence Detail" 
-                    className="object-contain w-full h-full"
+                    className="object-contain w-full h-full cursor-zoom-in transition-opacity group-hover:opacity-90"
+                    onClick={() => setLightboxUrl(getImageUrl(selectedReport.image_url))}
+                    title={language === 'vi' ? 'Nhấn để xem ảnh toàn màn hình' : 'Click to view full screen'}
+                    onError={(e) => {
+                      const el = e.target as HTMLImageElement;
+                      el.style.display = 'none';
+                      el.parentElement!.innerHTML = '<div class="flex flex-col items-center justify-center h-40 text-slate-500"><span class="text-sm">⚠️ Không tải được ảnh</span><span class="text-xs mt-1 font-mono text-slate-600">' + getImageUrl(selectedReport.image_url) + '</span></div>';
+                    }}
                   />
+                  <button
+                    onClick={() => setLightboxUrl(getImageUrl(selectedReport.image_url))}
+                    className="absolute top-2 right-2 bg-black/60 hover:bg-black/90 text-white p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-all"
+                    title={language === 'vi' ? 'Xem toàn màn hình' : 'View fullscreen'}
+                  >
+                    <ExternalLink size={16} />
+                  </button>
                 </div>
               ) : (
                 <div className="w-full h-40 rounded-xl border border-dashed border-slate-700 bg-slate-900 flex flex-col items-center justify-center text-slate-500">
@@ -354,6 +403,30 @@ export default function AdminDashboard({
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Lightbox Fullscreen Overlay */}
+      {lightboxUrl && (
+        <div 
+          className="fixed inset-0 z-[200] bg-black/95 backdrop-blur-sm flex items-center justify-center p-4"
+          onClick={() => setLightboxUrl(null)}
+        >
+          <button
+            onClick={() => setLightboxUrl(null)}
+            className="absolute top-4 right-4 bg-white/10 hover:bg-white/20 text-white p-2 rounded-xl border border-white/20 transition-all z-10"
+          >
+            <X size={24} />
+          </button>
+          <img
+            src={lightboxUrl}
+            alt="Full size evidence"
+            className="max-w-full max-h-[90vh] object-contain rounded-xl shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          />
+          <p className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/50 text-xs">
+            {language === 'vi' ? 'Nhấn ngoài ảnh để đóng' : 'Click outside to close'}
+          </p>
         </div>
       )}
     </div>

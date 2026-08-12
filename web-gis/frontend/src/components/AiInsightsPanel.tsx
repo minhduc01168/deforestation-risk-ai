@@ -87,7 +87,9 @@ export default function AiInsightsPanel({
                 <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 11}} width={80} />
                 <Tooltip 
                   cursor={{fill: 'rgba(255,255,255,0.05)'}}
-                  contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '8px', color: '#fff', fontSize: '12px' }}
+                  contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '8px', fontSize: '12px', padding: '8px 12px' }}
+                  labelStyle={{ color: '#94a3b8', fontWeight: 600, marginBottom: '4px' }}
+                  itemStyle={{ color: '#ffffff', fontWeight: 500 }}
                   formatter={(value) => [`${value}%`, 'Mức độ tác động']}
                 />
                 <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={20}>

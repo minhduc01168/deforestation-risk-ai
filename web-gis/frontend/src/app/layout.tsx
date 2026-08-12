@@ -17,14 +17,37 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "VIGIL - Giám Sát & Cảnh Báo Mất Rừng Gia Lai | AI Deforestation Monitoring & Early Warning Platform",
-  description: "Hệ thống AI & Viễn thám Giám sát & Cảnh báo Nguy cơ Mất rừng Tỉnh Gia Lai",
+  metadataBase: new URL("https://www.vigil.green"),
+  title: "VIGIL - Hệ thống AI cảnh báo sớm nguy cơ mất rừng",
+  description: "VIGIL tích hợp dữ liệu ảnh vệ tinh, trí tuệ nhân tạo (AI) cùng khảo sát thực địa nhằm phát hiện sớm đồng thời trực quan hóa các nguy cơ mất rừng trên bản đồ, từ đó thúc đẩy hành động bảo tồn nhanh chóng, hiệu quả hơn tại Việt Nam và trên toàn cầu.",
   icons: {
     icon: [
       { url: '/images/logo.png' },
     ],
     shortcut: '/images/logo.png',
     apple: '/images/logo.png',
+  },
+  openGraph: {
+    title: "VIGIL - Hệ thống AI cảnh báo sớm nguy cơ mất rừng",
+    description: "VIGIL tích hợp dữ liệu ảnh vệ tinh, trí tuệ nhân tạo (AI) cùng khảo sát thực địa nhằm phát hiện sớm đồng thời trực quan hóa các nguy cơ mất rừng trên bản đồ, từ đó thúc đẩy hành động bảo tồn nhanh chóng, hiệu quả hơn tại Việt Nam và trên toàn cầu.",
+    url: "https://www.vigil.green",
+    siteName: "VIGIL",
+    images: [
+      {
+        url: "/images/hero_forest_bg.png",
+        width: 1200,
+        height: 630,
+        alt: "VIGIL - AI Deforestation Early Warning System",
+      },
+    ],
+    locale: "vi_VN",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "VIGIL - Hệ thống AI cảnh báo sớm nguy cơ mất rừng",
+    description: "VIGIL tích hợp dữ liệu ảnh vệ tinh, trí tuệ nhân tạo (AI) cùng khảo sát thực địa nhằm phát hiện sớm đồng thời trực quan hóa các nguy cơ mất rừng trên bản đồ.",
+    images: ["/images/hero_forest_bg.png"],
   },
 };
 

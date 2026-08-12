@@ -1,3 +1,32 @@
+# ============================================================
+# docker-compose.yml — MÔI TRƯỜNG PHÁT TRIỂN (DEV)
+# ============================================================
+# File này dùng để chạy local / dev.
+#
+# ĐỂ DEPLOY LÊN PRODUCTION (VPS):
+#   Xem file docker-compose.prod.yml trên VPS.
+#   Bước bắt buộc trước khi up production:
+#
+#   1. Build frontend image với đúng API URL:
+#      docker build \
+#        --build-arg NEXT_PUBLIC_API_URL=https://www.vigil.green \
+#        -t web-gis-frontend:latest \
+#        ./frontend
+#
+#   2. Build backend image (nếu có thay đổi backend):
+#      docker build -t web-gis-backend:latest ./backend
+#
+#   3. Khởi động lại services:
+#      docker compose -f docker-compose.prod.yml down
+#      docker compose -f docker-compose.prod.yml up -d
+#
+# LƯU Ý QUAN TRỌNG — NEXT_PUBLIC_* VARIABLES:
+#   Các biến NEXT_PUBLIC_* của Next.js được nhúng vào JS bundle
+#   lúc BUILD TIME (không phải runtime). Vì vậy:
+#   - ĐÚNG : Truyền qua build.args (docker-compose) hoặc --build-arg (docker build)
+#   - SAI   : Truyền qua environment: (chỉ có tác dụng runtime, Next.js bỏ qua)
+# ============================================================
+
 services:
   # Database Service (PostgreSQL with PostGIS for spatial data)
   db:
@@ -36,12 +65,14 @@ services:
   frontend:
     build:
       context: ./frontend
+      args:
+        # NEXT_PUBLIC_* vars PHẢI được truyền qua build.args (build-time).
+        # Truyền qua environment: sẽ KHÔNG có tác dụng với Next.js.
+        # DEV  → http://localhost:8000
+        # PROD → https://www.vigil.green (truyền qua --build-arg khi docker build)
+        NEXT_PUBLIC_API_URL: http://localhost:8000
     ports:
       - "3000:3000"
-    environment:
-      # Tell the frontend where the API is running
-      # If deploying to a remote server, change this to the server's public IP/Domain
-      - NEXT_PUBLIC_API_URL=http://localhost:8000
     depends_on:
       - backend
 

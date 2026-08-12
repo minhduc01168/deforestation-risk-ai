@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useEffect, useRef } from 'react';
 import Map, { Source, Layer, NavigationControl, Marker, Popup, MapRef } from 'react-map-gl/maplibre';
-import { MapPin } from 'lucide-react';
+import { MapPin, Camera, X as XIcon } from 'lucide-react';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import MapLegend from './MapLegend';
 
@@ -15,7 +15,8 @@ const translations = {
     elevation: "Độ cao:",
     newReportTitle: "Gửi báo cáo thực địa",
     commentLabel: "Bình luận / Mô tả",
-    imageLabel: "Hình ảnh (URL)",
+    imageLabel: "Hình ảnh minh chứng",
+    uploadPlaceholder: "Nhấn để tải ảnh",
     submitBtn: "Gửi Báo Cáo",
     cancelBtn: "Hủy",
     coordsLabel: "Tọa độ:",
@@ -28,7 +29,8 @@ const translations = {
     elevation: "Elevation:",
     newReportTitle: "Submit Field Report",
     commentLabel: "Comment / Description",
-    imageLabel: "Image (URL)",
+    imageLabel: "Evidence Image",
+    uploadPlaceholder: "Click to upload image",
     submitBtn: "Submit Report",
     cancelBtn: "Cancel",
     coordsLabel: "Coordinates:",
@@ -73,7 +75,9 @@ export default function InteractiveMap({
   
   // Check-in Form State
   const [reportComment, setReportComment] = useState('');
-  const [reportImageUrl, setReportImageUrl] = useState('');
+  const [reportFile, setReportFile] = useState<File | null>(null);
+  const [reportImagePreview, setReportImagePreview] = useState<string | null>(null);
+  const reportFileInputRef = useRef<HTMLInputElement>(null);
 
   const handleReportSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -84,7 +88,7 @@ export default function InteractiveMap({
       formData.append('lat', selectedLocation.lat.toString());
       formData.append('lon', selectedLocation.lon.toString());
       if (reportComment) formData.append('comment', reportComment);
-      if (reportImageUrl) formData.append('image_url', reportImageUrl);
+      if (reportFile) formData.append('file', reportFile);
 
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/reports`, {
         method: 'POST',
@@ -105,7 +109,12 @@ export default function InteractiveMap({
       
       // Reset form and close popup
       setReportComment('');
-      setReportImageUrl('');
+      setReportFile(null);
+      if (reportImagePreview) {
+        URL.revokeObjectURL(reportImagePreview);
+        setReportImagePreview(null);
+      }
+      if (reportFileInputRef.current) reportFileInputRef.current.value = '';
       onLocationSelect(null);
       alert(language === 'vi' ? "Báo cáo thành công!" : "Report submitted successfully!");
     } catch (error) {
@@ -408,13 +417,50 @@ export default function InteractiveMap({
                 </div>
                 <div>
                   <label className="block text-[11px] font-bold text-slate-300 mb-1">{t.imageLabel}</label>
-                  <input 
-                    type="url" 
-                    className="w-full box-border bg-slate-800/90 border border-slate-700 rounded-xl p-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-colors" 
-                    placeholder="https://..."
-                    value={reportImageUrl}
-                    onChange={e => setReportImageUrl(e.target.value)}
-                  />
+                  <div className="relative w-full h-24 rounded-xl border-2 border-dashed border-slate-700 bg-slate-800/60 flex items-center justify-center overflow-hidden transition-colors hover:bg-slate-700/60">
+                    {/* Hidden file input */}
+                    <input
+                      type="file"
+                      accept="image/png, image/jpeg, image/jpg"
+                      ref={reportFileInputRef}
+                      className="hidden"
+                      onChange={(e) => {
+                        if (e.target.files && e.target.files[0]) {
+                          const f = e.target.files[0];
+                          setReportFile(f);
+                          if (reportImagePreview) URL.revokeObjectURL(reportImagePreview);
+                          setReportImagePreview(URL.createObjectURL(f));
+                        }
+                      }}
+                    />
+                    {reportImagePreview ? (
+                      <>
+                        <img src={reportImagePreview} alt="Preview" className="w-full h-full object-cover" />
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setReportFile(null);
+                            if (reportImagePreview) URL.revokeObjectURL(reportImagePreview);
+                            setReportImagePreview(null);
+                            if (reportFileInputRef.current) reportFileInputRef.current.value = '';
+                          }}
+                          className="absolute top-1 right-1 bg-red-500 hover:bg-red-600 text-white p-0.5 rounded-full shadow-lg"
+                        >
+                          <XIcon size={12} strokeWidth={3} />
+                        </button>
+                      </>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => reportFileInputRef.current?.click()}
+                        className="flex flex-col items-center justify-center w-full h-full text-slate-500 hover:text-green-400 cursor-pointer transition-colors"
+                      >
+                        <Camera size={22} className="mb-1" />
+                        <span className="text-[10px] font-medium uppercase tracking-wide">{t.uploadPlaceholder}</span>
+                      </button>
+                    )}
+                  </div>
                 </div>
                 <button 
                   type="submit" 
@@ -462,13 +508,27 @@ export default function InteractiveMap({
               <p className="text-xs mb-3 text-slate-200 bg-slate-800/80 p-2.5 rounded-xl border border-slate-700/60 leading-relaxed">
                 {popupInfo.comment}
               </p>
-              {popupInfo.image_url && (
-                <img 
-                  src={popupInfo.image_url.startsWith('http') ? popupInfo.image_url : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}${popupInfo.image_url}`} 
-                  alt="Field" 
-                  className="w-full h-36 object-cover rounded-xl border border-slate-700 shadow-md mb-2" 
-                />
-              )}
+              {popupInfo.image_url && (() => {
+                let imgPath = popupInfo.image_url;
+                if (imgPath.startsWith('http://') || imgPath.startsWith('https://')) {
+                  if (imgPath.includes('/uploads/') && !imgPath.includes('/api/uploads/')) {
+                    imgPath = imgPath.replace('/uploads/', '/api/uploads/');
+                  }
+                } else {
+                  if (!imgPath.startsWith('/api/')) {
+                    imgPath = imgPath.startsWith('/uploads/') ? `/api${imgPath}` : `/api/uploads/${imgPath.replace(/^\//, '')}`;
+                  }
+                  imgPath = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}${imgPath}`;
+                }
+                return (
+                  <img 
+                    src={imgPath}
+                    alt="Field" 
+                    className="w-full h-36 object-cover rounded-xl border border-slate-700 shadow-md mb-2" 
+                    onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                  />
+                );
+              })()}
               {/* Random animal avatar for anonymous */}
               <div className="flex items-center gap-2 mt-2 pt-2 border-t border-slate-800">
                 <img src={`https://ui-avatars.com/api/?name=Anon+User&background=random`} alt="Avatar" className="w-6 h-6 rounded-full border border-slate-700" />

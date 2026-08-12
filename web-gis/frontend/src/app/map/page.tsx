@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
+import { Menu, ChevronLeft } from 'lucide-react';
 
 // Dynamically import map to avoid SSR issues
 const MapComponent = dynamic(() => import('@/components/Map'), { ssr: false });
@@ -67,6 +68,8 @@ const translations = {
     login: "Đăng nhập",
     logout: "Đăng xuất",
     needLoginToReport: "Bạn cần đăng nhập để gửi báo cáo!",
+    hidePanel: "Ẩn",
+    filterPanel: "Bộ lọc",
   },
   en: {
     title: "Gia Lai Deforestation AI",
@@ -119,6 +122,8 @@ const translations = {
     login: "Login",
     logout: "Logout",
     needLoginToReport: "You must log in to submit a report!",
+    hidePanel: "Hide",
+    filterPanel: "Filters",
   }
 };
 
@@ -159,6 +164,19 @@ export default function Home() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGettingLocation, setIsGettingLocation] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  // Mobile sidebar state (collapsed by default on mobile)
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+
+  // Detect mobile to default sidebar closed
+  useEffect(() => {
+    const checkMobile = () => {
+      if (window.innerWidth < 768) setIsSidebarOpen(false);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
   
   // Coordinate Search State
   const [searchInput, setSearchInput] = useState("");
@@ -207,12 +225,6 @@ export default function Home() {
   };
 
   const handleSubmitReport = async () => {
-    if (!user || !token) {
-      alert(t.needLoginToReport);
-      setShowAuthModal(true);
-      return;
-    }
-    
     if (!selectedLocation) {
       alert(t.alertLocation);
       return;
@@ -234,9 +246,6 @@ export default function Home() {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
       const res = await fetch(`${apiUrl}/api/reports`, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
         body: formData,
       });
 
@@ -270,7 +279,9 @@ export default function Home() {
         {activeTab === 'map' ? (
           <>
             {/* Sidebar Controls */}
-            <div className="w-full md:w-80 bg-slate-800/95 backdrop-blur-md flex flex-col shadow-xl z-10 flex-shrink-0 border-t md:border-t-0 md:border-r border-slate-700 overflow-y-auto max-h-[50vh] md:max-h-none order-last md:order-first">
+            <div className={`${
+              isSidebarOpen ? 'flex' : 'hidden'
+            } w-full md:w-80 bg-slate-800/95 backdrop-blur-md flex-col shadow-xl z-10 flex-shrink-0 border-t md:border-t-0 md:border-r border-slate-700 overflow-y-auto max-h-[65vh] md:max-h-none order-last md:order-first md:flex`}>
               <div className="p-6 space-y-6">
                 
                 {/* AI Insights Quick Toggle Button */}
@@ -605,7 +616,27 @@ export default function Home() {
             </div>
 
             {/* Main Map Area */}
-            <div className="flex-1 relative order-first md:order-last h-[50vh] md:h-auto">
+            <div className={`flex-1 relative order-first md:order-last ${
+              isSidebarOpen ? 'h-[50vh]' : 'h-[calc(100vh-64px)]'
+            } md:h-auto transition-all duration-300`}>
+
+              {/* Mobile Sidebar Toggle Button */}
+              <button
+                onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                className="md:hidden absolute top-3 left-3 z-20 bg-slate-800/90 backdrop-blur-md border border-slate-600 text-slate-200 rounded-xl p-2.5 shadow-lg hover:bg-slate-700 transition-colors flex items-center gap-1.5"
+              >
+                {isSidebarOpen ? (
+                  <>
+                    <ChevronLeft size={16} />
+                    <span className="text-xs font-bold">{t.hidePanel}</span>
+                  </>
+                ) : (
+                  <>
+                    <Menu size={16} />
+                    <span className="text-xs font-bold">{t.filterPanel}</span>
+                  </>
+                )}
+              </button>
               <MapComponent 
                 currentYear={currentYear} 
                 filters={{ elevationMax, rainfallMax, slopeMax, treeCoverMin }} 
@@ -621,9 +652,14 @@ export default function Home() {
               />
               
               {/* Floating Indicator */}
-              <div className="absolute top-6 left-6 bg-slate-900/80 backdrop-blur-md px-5 py-3 rounded-2xl border border-slate-700 shadow-2xl pointer-events-none">
-                <p className="text-[10px] text-slate-400 uppercase tracking-widest font-semibold">{t.floatingLabel}</p>
-                <p className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-br from-white to-slate-400 mt-1">{currentYear}</p>
+              <div className="absolute top-3 right-12 md:top-6 md:right-auto md:left-6 bg-slate-900/90 backdrop-blur-md border border-slate-700/80 rounded-xl md:rounded-2xl p-2.5 md:p-3.5 shadow-2xl pointer-events-none z-10 w-fit">
+                <p className="text-[9px] md:text-[10px] text-slate-400 font-bold uppercase tracking-wider leading-tight whitespace-nowrap">
+                  {t.floatingLabel}
+                </p>
+                <div className="text-lg md:text-2xl font-black text-amber-400 font-mono mt-1 flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+                  <span>{currentYear}</span>
+                </div>
               </div>
             </div>
 
