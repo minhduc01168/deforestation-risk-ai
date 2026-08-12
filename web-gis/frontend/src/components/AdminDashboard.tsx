@@ -34,6 +34,7 @@ export default function AdminDashboard({
   const [reports, setReports] = useState<Report[]>([]);
   const [contacts, setContacts] = useState<ContactMessageItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   const [selectedReport, setSelectedReport] = useState<Report | null>(null);
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
 
@@ -83,6 +84,7 @@ export default function AdminDashboard({
         return;
       }
       
+      setFetchError(null);
       try {
         const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
         
@@ -93,6 +95,8 @@ export default function AdminDashboard({
         if (resReports.ok) {
           const data = await resReports.json();
           setReports(data.sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()));
+        } else {
+          console.error("Failed to fetch reports:", resReports.status);
         }
 
         // Fetch contact messages
@@ -102,9 +106,18 @@ export default function AdminDashboard({
         if (resContacts.ok) {
           const cData = await resContacts.json();
           setContacts(cData.sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()));
+        } else {
+          const errBody = await resContacts.text().catch(() => '');
+          console.error("Failed to fetch contact messages:", resContacts.status, errBody);
+          if (resContacts.status === 401) {
+            setFetchError("Phiên làm việc đã hết hạn. Vui lòng đăng nhập lại.");
+          } else {
+            setFetchError(`Không thể lấy danh sách ý kiến (Mã lỗi ${resContacts.status}). Cần khởi tạo lại CSDL.`);
+          }
         }
       } catch (err) {
         console.error("Failed to fetch admin data", err);
+        setFetchError("Không thể kết nối đến máy chủ backend.");
       } finally {
         setIsLoading(false);
       }
@@ -190,6 +203,18 @@ export default function AdminDashboard({
           </button>
         </div>
       </div>
+
+      {fetchError && (
+        <div className="bg-amber-950/80 border border-amber-700 text-amber-300 p-4 rounded-xl text-xs font-semibold flex items-center justify-between shadow-lg">
+          <span>⚠️ {fetchError}</span>
+          <button 
+            onClick={() => setFetchError(null)}
+            className="text-amber-400 hover:text-white ml-2 text-sm font-bold"
+          >
+            ✕
+          </button>
+        </div>
+      )}
 
       {activeTab === 'reports' ? (
         reports.length === 0 ? (

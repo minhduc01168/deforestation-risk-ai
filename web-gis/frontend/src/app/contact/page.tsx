@@ -32,15 +32,18 @@ export default function ContactPage() {
         setFormData({ name: '', email: '', organization: '', message: '' });
         setTimeout(() => setStatus('idle'), 5000);
       } else {
-        alert('Có lỗi xảy ra khi gửi tin nhắn liên hệ. Vui lòng thử lại.');
+        const errData = await res.json().catch(() => ({}));
+        alert(language === 'vi' 
+          ? `Có lỗi xảy ra khi gửi tin nhắn (${errData.detail || res.statusText}). Vui lòng thử lại.`
+          : `Error submitting contact message (${errData.detail || res.statusText}). Please try again.`);
         setStatus('idle');
       }
     } catch (err) {
       console.error('Contact submit error:', err);
-      // Fallback success for client UX if backend unreachable
-      setStatus('success');
-      setFormData({ name: '', email: '', organization: '', message: '' });
-      setTimeout(() => setStatus('idle'), 5000);
+      alert(language === 'vi' 
+        ? 'Không thể kết nối đến máy chủ. Vui lòng kiểm tra lại mạng.' 
+        : 'Could not connect to server. Please check your network.');
+      setStatus('idle');
     }
   };
 
